@@ -1,0 +1,23 @@
+entity.revenue_table:
+  path: 'admin/revenue-table'
+  defaults:
+    _controller: '\Drupal\carbrand_core\Controller\RevenueTableController::RevenueTableBuild'
+    _title: 'Revenue Table'
+  requirements:
+    _permission: 'administer revenue table'
+
+entity.price_list:
+  path: 'admin/config/carbrand-core/price-list'
+  defaults:
+    _form: '\Drupal\carbrand_core\Form\PriceListForm'
+    _title: 'Price List Settings'
+  requirements:
+    _permission: 'administer site configuration'
+
+cheeta_admin_settings.revenue_csv_form:
+  path: 'admin/config/carbrand-core/revenue-csv-importer'
+  defaults:
+    _form: '\Drupal\carbrand_core\Form\RevenueCSVImporterForm'
+    _title: 'Revenue CSV Importer'
+  requirements:
+    _permission: 'administer site configuration'

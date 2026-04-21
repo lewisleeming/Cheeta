@@ -1,11 +1,23 @@
-entity.webform.collection:
-  title: 'Webforms'
-  description: 'Create webforms and manage submissions.'
-  parent: system.admin_structure
-  route_name: entity.webform.collection
+entity.cheeta_admin_settings:
+  title: 'Cheeta admin settings'
+  description: 'Cheeta admin settings'
+  parent: system.admin
+  route_name: entity.cheeta_admin_settings
 
-webform.reports_plugins:
-  title: 'Webform plugins'
-  parent: system.admin_reports
-  description: 'Overview of plugins used by the Webform module.'
-  route_name: webform.reports_plugins.elements
+cheeta_admin_settings.price_list:
+  title: 'Price List'
+  description: 'Use this to update the price list'
+  parent: entity.cheeta_admin_settings
+  route_name: cheeta_admin_settings.price_list
+
+cheeta_admin_settings.revenue_table:
+  title: 'Revenue table'
+  description: 'View the revenue table'
+  parent: entity.cheeta_admin_settings
+  route_name: cheeta_admin_settings.revenue_table
+
+cheeta_admin_settings.revenue_csv_form:
+  title: 'Revenue csv form'
+  description: 'Insert csv for revenue table'
+  parent: entity.cheeta_admin_settings
+  route_name: cheeta_admin_settings.revenue_csv_form
