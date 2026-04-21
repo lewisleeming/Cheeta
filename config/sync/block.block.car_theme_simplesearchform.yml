@@ -1,0 +1,41 @@
+uuid: 037ace16-f2b5-4bba-aab2-b09ddb96c6d6
+langcode: en
+status: true
+dependencies:
+  module:
+    - simple_search_form
+    - system
+  theme:
+    - car_theme
+id: car_theme_simplesearchform
+theme: car_theme
+region: header
+weight: 0
+provider: null
+plugin: simple_search_form_block
+settings:
+  id: simple_search_form_block
+  label: 'Simple search form'
+  label_display: '0'
+  provider: simple_search_form
+  action_path: /search
+  get_parameter: search_api_fulltext
+  input_type: search
+  search_api_autocomplete:
+    search_id: ''
+    display: ''
+    arguments: ''
+    filter: ''
+  input_label: Search
+  input_label_display: before
+  input_placeholder: ''
+  input_css_classes: ''
+  submit_display: true
+  submit_label: Find
+  input_keep_value: false
+  preserve_url_query_parameters: {  }
+visibility:
+  request_path:
+    id: request_path
+    negate: true
+    pages: /search

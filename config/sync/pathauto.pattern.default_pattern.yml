@@ -9,16 +9,15 @@ label: 'Default pattern'
 type: 'canonical_entities:node'
 pattern: '/[node:content-type]/[node:title]'
 selection_criteria:
-  d34af190-667a-4906-ad6a-1b68e8e1e534:
+  12ab913d-2093-451b-b742-b3e29802d0c5:
     id: 'entity_bundle:node'
     negate: false
-    uuid: d34af190-667a-4906-ad6a-1b68e8e1e534
+    uuid: 12ab913d-2093-451b-b742-b3e29802d0c5
     context_mapping:
       node: node
     bundles:
       article: article
       dealership_page: dealership_page
-      listing_page: listing_page
 selection_logic: and
 weight: -5
 relationships: {  }

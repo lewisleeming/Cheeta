@@ -1,0 +1,22 @@
+uuid: 8f8d2224-9595-46c9-a49b-0c49e2d46d3e
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.dealership_page
+id: node.dealership_page.promote
+field_name: promote
+entity_type: node
+bundle: dealership_page
+label: 'Promoted to front page'
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean
