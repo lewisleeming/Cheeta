@@ -1,0 +1,35 @@
+{##}
+{#Available variables:#}
+{#- content: Render array of paragraph fields#}
+{#- paragraph: The paragraph entity#}
+{##}
+
+{% set image_left = paragraph.field_boolean.value == '0' %}
+
+<div class="image-text-paragraph text-image {{ image_left ? 'layout-left' : 'layout-right' }}">
+  {% if image_left %}
+    <div class="image">
+      {{ content.field_image }}
+    </div>
+    <div class="text">
+      {{ content.field_body }}
+      {% if content.field_link %}
+        <div class="link-box">
+          {{ content.field_link }}
+        </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="text">
+      {{ content.field_body }}
+    </div>
+    <div class="image">
+      {{ content.field_image }}
+      {% if content.field_link %}
+        <div class="link-box">
+          <a href="{{ content.field_link.url }}" class="link-box-content">{{ content.field_link.title }}</a>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

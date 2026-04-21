@@ -1,0 +1,23 @@
+uuid: 28b8fff4-a80e-4f5f-909f-4c8ff87f5666
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: default_pattern
+label: 'Default pattern'
+type: 'canonical_entities:node'
+pattern: '/[node:content-type]/[node:title]'
+selection_criteria:
+  12ab913d-2093-451b-b742-b3e29802d0c5:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: 12ab913d-2093-451b-b742-b3e29802d0c5
+    context_mapping:
+      node: node
+    bundles:
+      article: article
+      dealership_page: dealership_page
+selection_logic: and
+weight: -5
+relationships: {  }

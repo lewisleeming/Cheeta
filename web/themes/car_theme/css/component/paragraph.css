@@ -1,0 +1,59 @@
+.image-text-paragraph {
+  display: flex;
+  gap: 50px;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* Image takes up 33% of the width and has rounded corners */
+.image-text-paragraph .image img {
+  border-radius: 15px;  /* Curved edges */
+  width: 100%;          /* Make sure the image takes up the full container width */
+  height: auto;         /* Maintain aspect ratio */
+  object-fit: cover;    /* Ensure the image fits nicely */
+}
+
+/* Text takes the remaining space */
+.image-text-paragraph .text {
+  flex: 1;
+}
+
+/* Left/right layout order handling */
+.image-text-paragraph.layout-left .image {
+  order: 0;
+}
+
+.image-text-paragraph.layout-left .text {
+  order: 1;
+}
+
+.image-text-paragraph.layout-right .image {
+  order: 1;
+}
+
+.image-text-paragraph.layout-right .text {
+  order: 0;
+}
+
+/* Optional: Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .image-text-paragraph {
+    flex-direction: column; /* Stack the image and text vertically */
+  }
+
+  .image-text-paragraph .image,
+  .image-text-paragraph .text {
+    order: unset; /* Reset order for small screens */
+    flex: unset; /* Unset flex properties for small screens */
+  }
+}
+
+/* For horizontal and vertical centering of text */
+.link-box {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center;     /* Center vertically */
+  height: 100%;            /* Ensure it takes up full height */
+  text-align: center;      /* Center text inside the element */
+}

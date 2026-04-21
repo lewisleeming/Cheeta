@@ -1,0 +1,22 @@
+uuid: 4415d995-ee9c-489d-92e6-61caa9d87c33
+langcode: en
+status: true
+dependencies:
+  module:
+    - help
+  theme:
+    - car_theme
+_core:
+  default_config_hash: 8nOAry2oKqJOr0zbrlJ3sZHDFJLIO6j-0vT0K_TYca4
+id: car_theme_help
+theme: car_theme
+region: header
+weight: 0
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: Help
+  label_display: '0'
+  provider: help
+visibility: {  }

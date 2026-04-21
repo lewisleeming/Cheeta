@@ -1,0 +1,23 @@
+uuid: 07482c08-14b5-4f0e-b501-b456a1bcf249
+langcode: en
+status: true
+dependencies:
+  module:
+    - search
+  theme:
+    - cheeta_theme
+_core:
+  default_config_hash: _nZjxxdypO6xrOAJkCYD81v0L7wh2zbCAVO7_C-UKIc
+id: cheeta_theme_search_form_narrow
+theme: cheeta_theme
+region: primary_menu
+weight: -4
+provider: null
+plugin: search_form_block
+settings:
+  id: search_form_block
+  label: 'Search form (narrow)'
+  label_display: '0'
+  provider: search
+  page_id: null
+visibility: {  }

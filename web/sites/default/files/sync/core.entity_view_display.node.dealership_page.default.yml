@@ -1,0 +1,60 @@
+uuid: 223e0830-2ab4-4e4f-80a4-24a56e17e833
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.dealership_page.field_body
+    - field.field.node.dealership_page.field_components
+    - field.field.node.dealership_page.field_location
+    - field.field.node.dealership_page.field_main_image
+    - node.type.dealership_page
+  module:
+    - entity_reference_revisions
+    - text
+    - user
+id: node.dealership_page.default
+targetEntityType: node
+bundle: dealership_page
+mode: default
+content:
+  field_body:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_components:
+    type: entity_reference_revisions_entity_view
+    label: hidden
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_location:
+    type: entity_reference_label
+    label: hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_main_image:
+    type: entity_reference_entity_view
+    label: hidden
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

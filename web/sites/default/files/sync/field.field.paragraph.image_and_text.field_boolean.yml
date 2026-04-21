@@ -1,0 +1,21 @@
+uuid: 074d6f39-7826-474d-88b7-1344380f9442
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_boolean
+    - paragraphs.paragraphs_type.image_and_text
+id: paragraph.image_and_text.field_boolean
+field_name: field_boolean
+entity_type: paragraph
+bundle: image_and_text
+label: 'Image alignment'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: Right
+  off_label: Left
+field_type: boolean

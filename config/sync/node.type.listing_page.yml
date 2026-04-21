@@ -1,0 +1,18 @@
+uuid: 87cb9f9a-1aa8-444d-8236-9abcce8cb571
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus:
+      - main
+    parent: 'main:'
+name: 'Listing page'
+type: listing_page
+description: 'Listing page to put cars for sale.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: false

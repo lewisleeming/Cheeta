@@ -1,0 +1,24 @@
+uuid: 06358bf2-b887-4d01-ab10-2ce4db638326
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_body
+    - filter.format.basic_html
+    - node.type.dealership_page
+  module:
+    - text
+id: node.dealership_page.field_body
+field_name: field_body
+entity_type: node
+bundle: dealership_page
+label: Body
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - basic_html
+field_type: text_long

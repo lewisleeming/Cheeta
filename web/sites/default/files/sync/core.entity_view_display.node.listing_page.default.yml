@@ -1,0 +1,51 @@
+uuid: e4c67b14-6eff-48b6-9c84-187f7660b870
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.listing_page.field_body
+    - field.field.node.listing_page.field_main_image
+    - field.field.node.listing_page.field_parent
+    - field.field.node.listing_page.field_price
+    - node.type.listing_page
+  module:
+    - text
+    - user
+id: node.listing_page.default
+targetEntityType: node
+bundle: listing_page
+mode: default
+content:
+  field_body:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_main_image:
+    type: entity_reference_entity_view
+    label: hidden
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_price:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  field_parent: true
+  langcode: true
+  search_api_excerpt: true

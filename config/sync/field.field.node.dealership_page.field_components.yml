@@ -1,0 +1,49 @@
+uuid: 986c8deb-948a-4bb4-9c49-8d28179d961d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_components
+    - node.type.dealership_page
+    - paragraphs.paragraphs_type.accordion
+    - paragraphs.paragraphs_type.image_and_text
+    - paragraphs.paragraphs_type.image_collage
+    - paragraphs.paragraphs_type.wysiwyg
+  module:
+    - entity_reference_revisions
+id: node.dealership_page.field_components
+field_name: field_components
+entity_type: node
+bundle: dealership_page
+label: Components
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      accordion: accordion
+      image_and_text: image_and_text
+      image_collage: image_collage
+      wysiwyg: wysiwyg
+    negate: 0
+    target_bundles_drag_drop:
+      accordion:
+        weight: 6
+        enabled: true
+      accordion_item:
+        weight: 7
+        enabled: false
+      image_and_text:
+        weight: 8
+        enabled: true
+      image_collage:
+        weight: 9
+        enabled: true
+      wysiwyg:
+        weight: 10
+        enabled: true
+field_type: entity_reference_revisions

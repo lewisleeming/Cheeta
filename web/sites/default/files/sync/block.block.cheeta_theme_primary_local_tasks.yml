@@ -1,0 +1,22 @@
+uuid: 5a5078c3-b3a2-46ae-87a8-7895e9c27af3
+langcode: en
+status: true
+dependencies:
+  theme:
+    - cheeta_theme
+_core:
+  default_config_hash: nGE3EoPQQaQCuqTUtZgw0-KIzmrqdKDzdNQf2JyPUt4
+id: cheeta_theme_primary_local_tasks
+theme: cheeta_theme
+region: header
+weight: -4
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: 'Primary tabs'
+  label_display: '0'
+  provider: core
+  primary: true
+  secondary: false
+visibility: {  }

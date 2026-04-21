@@ -1,0 +1,22 @@
+uuid: 64b4e765-8698-47c1-ac0e-cc5398b331e6
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: listing_page
+label: 'Listing page'
+type: 'canonical_entities:node'
+pattern: 'Dealership/[node:field_parent]/[node:title]'
+selection_criteria:
+  aa523309-3391-433d-ac9c-19ec74b9b5f5:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: aa523309-3391-433d-ac9c-19ec74b9b5f5
+    context_mapping:
+      node: node
+    bundles:
+      listing_page: listing_page
+selection_logic: and
+weight: -5
+relationships: {  }

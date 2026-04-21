@@ -1,0 +1,45 @@
+uuid: fa0a845b-dfc1-4cd5-932d-579add43b487
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_components
+    - node.type.homepage
+    - paragraphs.paragraphs_type.image_and_text
+    - paragraphs.paragraphs_type.image_collage
+  module:
+    - entity_reference_revisions
+id: node.homepage.field_components
+field_name: field_components
+entity_type: node
+bundle: homepage
+label: Components
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      image_and_text: image_and_text
+      image_collage: image_collage
+    negate: 0
+    target_bundles_drag_drop:
+      accordion:
+        weight: 6
+        enabled: false
+      accordion_item:
+        weight: 7
+        enabled: false
+      image_and_text:
+        weight: 8
+        enabled: true
+      image_collage:
+        weight: 9
+        enabled: true
+      wysiwyg:
+        weight: 10
+        enabled: false
+field_type: entity_reference_revisions

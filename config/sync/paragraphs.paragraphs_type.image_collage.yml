@@ -1,0 +1,10 @@
+uuid: 3651c2f5-b81b-4677-8247-1a9dd43fa387
+langcode: en
+status: true
+dependencies: {  }
+id: image_collage
+label: 'Image collage'
+icon_uuid: null
+icon_default: null
+description: ''
+behavior_plugins: {  }

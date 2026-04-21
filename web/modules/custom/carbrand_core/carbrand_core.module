@@ -1,0 +1,6 @@
+<?php
+
+function carbrand_core_preprocess_page(&$variable){
+  $test = true;
+}
+

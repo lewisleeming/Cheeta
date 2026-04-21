@@ -1,0 +1,22 @@
+uuid: 25df10f0-16c1-419d-a846-4dcbd59712d4
+langcode: en
+status: true
+dependencies:
+  theme:
+    - car_theme
+_core:
+  default_config_hash: Hh01DLj9k7UnNdPpOQXHZHW7GHf2OPNDQyCJF7_R9ac
+id: car_theme_primary_local_tasks
+theme: car_theme
+region: header
+weight: 0
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: 'Primary tabs'
+  label_display: '0'
+  provider: core
+  primary: true
+  secondary: false
+visibility: {  }

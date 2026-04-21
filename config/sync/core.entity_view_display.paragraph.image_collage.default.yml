@@ -1,0 +1,22 @@
+uuid: a6c589b1-c6c7-41ed-80fe-8954ea8a1366
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.image_collage.field_image
+    - paragraphs.paragraphs_type.image_collage
+id: paragraph.image_collage.default
+targetEntityType: paragraph
+bundle: image_collage
+mode: default
+content:
+  field_image:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden: {  }
