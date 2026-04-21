@@ -112,7 +112,7 @@ class Url implements TrustedCallbackInterface {
    * code more self-documenting.
    *
    * @param string $route_name
-   *   The name of the route
+   *   The name of the route.
    * @param array $route_parameters
    *   (optional) An associative array of parameter names and values.
    * @param array $options
@@ -138,7 +138,7 @@ class Url implements TrustedCallbackInterface {
    * path (like robots.txt) use Url::fromUri() with the base: scheme.
    *
    * @param string $route_name
-   *   The name of the route
+   *   The name of the route.
    * @param array $route_parameters
    *   (optional) An associative array of route parameter names and values.
    * @param array $options
@@ -544,6 +544,7 @@ class Url implements TrustedCallbackInterface {
    * Indicates if this URL is external.
    *
    * @return bool
+   *   TRUE if the URL is external, FALSE otherwise.
    */
   public function isExternal() {
     return $this->external;
@@ -553,6 +554,7 @@ class Url implements TrustedCallbackInterface {
    * Indicates if this URL has a Drupal route.
    *
    * @return bool
+   *   TRUE if there is a Drupal route for the URL, FALSE otherwise.
    */
   public function isRouted() {
     return !$this->unrouted;
@@ -562,6 +564,7 @@ class Url implements TrustedCallbackInterface {
    * Returns the route name.
    *
    * @return string
+   *   The name of the route.
    *
    * @throws \UnexpectedValueException
    *   If this is a URI with no corresponding route.
@@ -578,13 +581,14 @@ class Url implements TrustedCallbackInterface {
    * Returns the route parameters.
    *
    * @return array
+   *   An associative array of route parameters.
    *
    * @throws \UnexpectedValueException
    *   If this is a URI with no corresponding route.
    */
   public function getRouteParameters() {
     if ($this->unrouted) {
-      throw new \UnexpectedValueException('External URLs do not have internal route parameters.');
+      throw new \UnexpectedValueException($this->getUri() . ' has no corresponding route.');
     }
 
     return $this->routeParameters;
@@ -603,7 +607,7 @@ class Url implements TrustedCallbackInterface {
    */
   public function setRouteParameters($parameters) {
     if ($this->unrouted) {
-      throw new \UnexpectedValueException('External URLs do not have route parameters.');
+      throw new \UnexpectedValueException($this->getUri() . ' has no corresponding route.');
     }
     $this->routeParameters = $parameters;
     return $this;
@@ -624,7 +628,7 @@ class Url implements TrustedCallbackInterface {
    */
   public function setRouteParameter($key, $value) {
     if ($this->unrouted) {
-      throw new \UnexpectedValueException('External URLs do not have route parameters.');
+      throw new \UnexpectedValueException($this->getUri() . ' has no corresponding route.');
     }
     $this->routeParameters[$key] = $value;
     return $this;
@@ -749,7 +753,7 @@ class Url implements TrustedCallbackInterface {
    * If this Url object was constructed from a Drupal route or from an internal
    * URI (URIs using the internal:, base:, or entity: schemes), the returned
    * string will either be a relative URL like /node/1 or an absolute URL like
-   * http://example.com/node/1 depending on the options array, plus any
+   * https://example.com/node/1 depending on the options array, plus any
    * specified query string or fragment.
    *
    * @param bool $collect_bubbleable_metadata
@@ -801,7 +805,7 @@ class Url implements TrustedCallbackInterface {
    * @param bool $return_as_object
    *   (optional) Defaults to FALSE.
    *
-   * @return bool|\Drupal\Core\Access\AccessResultInterface
+   * @return ($return_as_object is true ? \Drupal\Core\Access\AccessResultInterface : bool)
    *   The access result. Returns a boolean if $return_as_object is FALSE (this
    *   is the default) and otherwise an AccessResultInterface object.
    *   When a boolean is returned, the result of AccessInterface::isAllowed() is
@@ -817,6 +821,7 @@ class Url implements TrustedCallbackInterface {
 
   /**
    * @return \Drupal\Core\Access\AccessManagerInterface
+   *   The access manager service.
    */
   protected function accessManager() {
     if (!isset($this->accessManager)) {

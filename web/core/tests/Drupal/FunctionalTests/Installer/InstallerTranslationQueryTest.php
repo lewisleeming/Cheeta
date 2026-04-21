@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\FunctionalTests\Installer;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Installs Drupal in German and checks resulting site.
  *
- * @group Installer
- *
  * @see \Drupal\FunctionalTests\Installer\InstallerTranslationTest
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class InstallerTranslationQueryTest extends InstallerTestBase {
 
   /**
@@ -35,7 +38,7 @@ class InstallerTranslationQueryTest extends InstallerTestBase {
 
     // The unrouted URL assembler does not exist at this point, so we build the
     // URL ourselves.
-    $this->drupalGet($GLOBALS['base_url'] . '/core/install.php' . '?langcode=' . $this->langcode);
+    $this->drupalGet($GLOBALS['base_url'] . '/core/install.php?langcode=' . $this->langcode);
 
     // The language should have been automatically detected, all following
     // screens should be translated already.
@@ -63,7 +66,8 @@ class InstallerTranslationQueryTest extends InstallerTestBase {
 
     // Verify German was configured but not English.
     $this->drupalGet('admin/config/regional/language');
-    $this->assertSession()->pageTextContains('German');
+    // cspell:ignore deutsch
+    $this->assertSession()->pageTextContains('Deutsch');
     $this->assertSession()->pageTextNotContains('English');
   }
 

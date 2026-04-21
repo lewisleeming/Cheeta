@@ -485,7 +485,7 @@ function xmlsitemap_sitemap_uri(XmlSitemapInterface $sitemap) {
 /**
  * @} End of "defgroup xmlsitemap_api"
  */
-function xmlsitemap_get_directory(XmlSitemapInterface $sitemap = NULL, $directory = NULL) {
+function xmlsitemap_get_directory(?XmlSitemapInterface $sitemap = NULL, $directory = NULL) {
   if (!isset($directory)) {
     $directory = \Drupal::config('xmlsitemap.settings')->get('path') ?: 'xmlsitemap';
   }
@@ -502,7 +502,7 @@ function xmlsitemap_get_directory(XmlSitemapInterface $sitemap = NULL, $director
 /**
  * Check that the sitemap files directory exists and is writable.
  */
-function xmlsitemap_check_directory(XmlSitemapInterface $sitemap = NULL) {
+function xmlsitemap_check_directory(?XmlSitemapInterface $sitemap = NULL) {
   $directory = xmlsitemap_get_directory($sitemap);
   /** @var \Drupal\Core\File\FileSystemInterface $filesystem */
   $filesystem = \Drupal::service('file_system');
@@ -552,7 +552,7 @@ function xmlsitemap_check_all_directories() {
  * @return bool
  *   Returns TRUE is operation was successful, FALSE otherwise.
  */
-function xmlsitemap_clear_directory(XmlSitemapInterface $sitemap = NULL, $delete = FALSE) {
+function xmlsitemap_clear_directory(?XmlSitemapInterface $sitemap = NULL, $delete = FALSE) {
   $directory = xmlsitemap_get_directory($sitemap);
   return _xmlsitemap_delete_recursive($directory, $delete);
 }
@@ -2155,7 +2155,7 @@ function xmlsitemap_get_status_options($default = NULL) {
  * @return int|string
  *   Returns current chunk of the sitemap.
  */
-function xmlsitemap_get_current_chunk(XmlSitemapInterface $sitemap, Request $request = NULL) {
+function xmlsitemap_get_current_chunk(XmlSitemapInterface $sitemap, ?Request $request = NULL) {
   if (!isset($request)) {
     $request = \Drupal::request();
   }

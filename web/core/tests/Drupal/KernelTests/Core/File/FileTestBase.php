@@ -41,13 +41,17 @@ abstract class FileTestBase extends KernelTestBase {
     // file_default_scheme(). As we are creating the configuration here remove
     // the global override.
     unset($GLOBALS['config']['system.file']);
-    \Drupal::configFactory()->getEditable('system.file')->set('default_scheme', 'public')->save();
+    \Drupal::configFactory()->getEditable('system.file')
+      ->set('default_scheme', 'public')
+      ->set('allow_insecure_uploads', FALSE)
+      ->set('temporary_maximum_age', 21600)
+      ->save();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
 
     $container->register('stream_wrapper.private', 'Drupal\Core\StreamWrapper\PrivateStream')
@@ -86,7 +90,7 @@ abstract class FileTestBase extends KernelTestBase {
    * @param string|null $message
    *   Optional message.
    */
-  public function assertFilePermissions($filepath, $expected_mode, $message = NULL) {
+  public function assertFilePermissions($filepath, $expected_mode, $message = NULL): void {
     // Clear out PHP's file stat cache to be sure we see the current value.
     clearstatcache(TRUE, $filepath);
 
@@ -121,7 +125,7 @@ abstract class FileTestBase extends KernelTestBase {
    * @param string|null $message
    *   Optional message.
    */
-  public function assertDirectoryPermissions($directory, $expected_mode, $message = NULL) {
+  public function assertDirectoryPermissions($directory, $expected_mode, $message = NULL): void {
     // Clear out PHP's file stat cache to be sure we see the current value.
     clearstatcache(TRUE, $directory);
 

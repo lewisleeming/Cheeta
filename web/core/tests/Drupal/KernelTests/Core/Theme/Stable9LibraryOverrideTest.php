@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Theme;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests Stable 9's library overrides.
- *
- * @group Theme
- * @group #slow
  */
+#[Group('Theme')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class Stable9LibraryOverrideTest extends StableLibraryOverrideTestBase {
 
   /**
@@ -30,6 +33,7 @@ class Stable9LibraryOverrideTest extends StableLibraryOverrideTestBase {
     'options/drupal.options-icon',
     'telephone/drupal.telephone-icon',
     // This library will be changed in https://www.drupal.org/i/3096017.
+    'workspaces/drupal.workspaces.off-canvas',
     'workspaces/drupal.workspaces.toolbar',
     // This library will be removed in https://www.drupal.org/i/3207233.
     'workspaces/drupal.workspaces.overview',
@@ -46,7 +50,9 @@ class Stable9LibraryOverrideTest extends StableLibraryOverrideTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installConfig('system');
     $this->container->get('theme_installer')->install(['stable9']);
+    $this->config('system.theme')->set('default', 'stable9')->save();
 
     // Enable all core modules.
     $this->enableVisibleAndStableCoreModules();

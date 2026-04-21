@@ -29,6 +29,7 @@
         "drupal/pathauto": "^1.13",
         "drupal/search_api_autocomplete": "^1.11",
         "drupal/search_api_solr": "^4.3",
+        "drupal/simple_search_form": "^1.9",
         "drupal/svg_image": "^3.2",
         "drupal/webform": "^6.3@beta",
         "drupal/xmlsitemap": "^2.0@beta",

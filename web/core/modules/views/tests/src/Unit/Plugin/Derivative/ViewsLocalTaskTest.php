@@ -6,13 +6,16 @@ namespace Drupal\Tests\views\Unit\Plugin\Derivative;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\Derivative\ViewsLocalTask;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * @coversDefaultClass \Drupal\views\Plugin\Derivative\ViewsLocalTask
- * @group views
+ * Tests Drupal\views\Plugin\Derivative\ViewsLocalTask.
  */
+#[CoversClass(ViewsLocalTask::class)]
+#[Group('views')]
 class ViewsLocalTaskTest extends UnitTestCase {
 
   /**
@@ -30,10 +33,17 @@ class ViewsLocalTaskTest extends UnitTestCase {
   protected $state;
 
   /**
+   * The views storage.
+   *
    * @var \Drupal\Core\Entity\EntityStorageInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $viewStorage;
 
+  /**
+   * The base definition for the test plugin.
+   *
+   * @var array
+   */
   protected $baseDefinition = [
     'class' => '\Drupal\views\Plugin\Menu\LocalTask\ViewsLocalTask',
     'deriver' => '\Drupal\views\Plugin\Derivative\ViewsLocalTask',
@@ -383,6 +393,11 @@ class ViewsLocalTaskTest extends UnitTestCase {
  */
 class TestViewsLocalTask extends ViewsLocalTask {
 
+  /**
+   * The view result.
+   *
+   * @var array
+   */
   protected $result;
 
   /**

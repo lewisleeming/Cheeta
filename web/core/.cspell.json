@@ -7,6 +7,7 @@
       "**/.*.json",
       ".*ignore",
       "composer.lock",
+      "../composer/Metapackage/PinnedDevDependencies/composer.json",
       "assets/vendor/**",
       "misc/jquery.form.js",
       "lib/Drupal/Component/Diff/**",
@@ -16,6 +17,8 @@
       "../**/LICENSE.txt",
       "modules/**/Migrate*Test.php",
       "modules/ckeditor5/js/build/*",
+      "modules/contact/tests/fixtures/drupal6.php",
+      "modules/contact/tests/fixtures/drupal7.php",
       "modules/media/tests/fixtures/oembed/*",
       "modules/migrate_drupal/tests/fixtures/drupal6.php",
       "modules/migrate_drupal/tests/fixtures/drupal7.php",
@@ -26,6 +29,7 @@
       "profiles/demo_umami/modules/demo_umami_content/default_content/languages/es/**/*",
       "tests/fixtures/config_install/*",
       "tests/fixtures/files/*",
+      "tests/fixtures/phpunit_*.xml",
       "tests/Drupal/Tests/Component/Annotation/Doctrine/**",
       "tests/PHPStan/vendor/**",
       "themes/olivero/fonts/**",
@@ -65,12 +69,16 @@
       }
      ],
     "flagWords": [
+      "blacklist",
+      "blacklisted",
       "e-mail",
       "grey",
       "hte",
       "ist",
       "please",
       "queuing",
+      "whitelist",
+      "whitelisted",
       "writeable"
     ],
     "overrides": [

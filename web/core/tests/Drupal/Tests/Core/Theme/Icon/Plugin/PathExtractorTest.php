@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Theme\Icon\Plugin;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Theme\Icon\IconDefinition;
 use Drupal\Core\Theme\Icon\IconFinder;
 use Drupal\Core\Theme\Plugin\IconExtractor\PathExtractor;
 use Drupal\Tests\Core\Theme\Icon\IconTestTrait;
+use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Theme\Plugin\IconExtractor\PathExtractor
- *
- * @group icon
+ * Tests Drupal\Core\Theme\Plugin\IconExtractor\PathExtractor.
  */
+#[CoversClass(PathExtractor::class)]
+#[Group('icon')]
 class PathExtractorTest extends UnitTestCase {
 
   use IconTestTrait;
@@ -110,9 +113,8 @@ class PathExtractorTest extends UnitTestCase {
    *   The files to test from IconFinder::getFilesFromSources.
    * @param bool $expected_empty
    *   Has icon result, default FALSE.
-   *
-   * @dataProvider providerDiscoverIconsPath
    */
+  #[DataProvider('providerDiscoverIconsPath')]
   public function testDiscoverIconsPath(array $files, bool $expected_empty = FALSE): void {
     $this->iconFinder->method('getFilesFromSources')->willReturn($files);
 
@@ -125,7 +127,7 @@ class PathExtractorTest extends UnitTestCase {
 
     // Result expected is keyed by icon_id with values 'source' and 'group'.
     $expected_result = [];
-    foreach ($files as $index => $icon) {
+    foreach ($files as $icon) {
       $expected_id = $this->pluginId . IconDefinition::ICON_SEPARATOR . $icon['icon_id'];
       if (!isset($icon['group'])) {
         $icon['group'] = NULL;

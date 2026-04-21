@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\image\Unit;
 
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 
 /**
- * @group Image
- * @group legacy
+ * Tests deprecation of image_filter_keyword().
  */
+#[Group('Image')]
+#[IgnoreDeprecations]
 class ImageDeprecationTest extends UnitTestCase {
 
   /**

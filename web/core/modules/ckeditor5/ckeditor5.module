@@ -16,36 +16,12 @@ use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Ajax\RemoveCommand;
 use Drupal\Core\Form\FormStateInterface;
-
-/**
- * Implements hook_module_implements_alter().
- */
-function ckeditor5_module_implements_alter(&$implementations, $hook): void {
-  // This module's implementation of form_filter_format_form_alter() must happen
-  // after the editor module's implementation, as that implementation adds the
-  // active editor to $form_state. It must also happen after the media module's
-  // implementation so media_filter_format_edit_form_validate can be removed
-  // from the validation chain, as that validator is not needed with CKEditor 5
-  // and will trigger a false error.
-  if ($hook === 'form_alter' && isset($implementations['ckeditor5']) && isset($implementations['editor'])) {
-    $group = $implementations['ckeditor5'];
-    unset($implementations['ckeditor5']);
-
-    $offset = array_search('editor', array_keys($implementations)) + 1;
-    if (array_key_exists('media', $implementations)) {
-      $media_offset = array_search('media', array_keys($implementations)) + 1;
-      $offset = max([$offset, $media_offset]);
-    }
-    $implementations = array_slice($implementations, 0, $offset, TRUE) +
-      ['ckeditor5' => $group] +
-      array_slice($implementations, $offset, NULL, TRUE);
-  }
-}
+use Drupal\Core\Language\LanguageManagerInterface;
 
 /**
  * Form submission handler for filter format forms.
  */
-function ckeditor5_filter_format_edit_form_submit(array $form, FormStateInterface $form_state) {
+function ckeditor5_filter_format_edit_form_submit(array $form, FormStateInterface $form_state): void {
   $limit_allowed_html_tags = isset($form['filters']['settings']['filter_html']['allowed_html']);
   $manually_editable_tags = $form_state->getValue(['editor', 'settings', 'plugins', 'ckeditor5_sourceEditing', 'allowed_tags']);
   $styles = $form_state->getValue(['editor', 'settings', 'plugins', 'ckeditor5_style', 'styles']);
@@ -101,7 +77,8 @@ function _update_ckeditor5_html_filter(array $form, FormStateInterface $form_sta
   }
 
   if ($form_state->get('ckeditor5_is_active')) {
-    // Delete all existing validation messages, replace them with the current set.
+    // Delete all existing validation messages, replace them with the current
+    // set.
     $response->addCommand(new RemoveCommand('#ckeditor5-realtime-validation-messages-container > *'));
     $messages = \Drupal::messenger()->deleteAll();
     foreach ($messages as $type => $messages_by_type) {
@@ -139,7 +116,7 @@ function _update_ckeditor5_html_filter(array $form, FormStateInterface $form_sta
   $response->addCommand(new InvokeCommand('[data-drupal-selector="edit-editor-editor"]', $ckeditor5_selected_but_errors ? 'addClass' : 'removeClass', ['error']));
   $response->addCommand(new InvokeCommand('[data-drupal-selector="edit-editor-editor"]', $ckeditor5_selected_but_errors ? 'attr' : 'removeAttr', ['data-error-switching-to-ckeditor5', TRUE]));
 
-  /**
+  /*
    * Recursively find #attach items in the form and add as attachments to the
    * AJAX response.
    *
@@ -172,50 +149,20 @@ function _update_ckeditor5_html_filter(array $form, FormStateInterface $form_sta
  *
  * @return array|mixed|string
  *   The associated CKEditor 5 langcode.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Use
+ * \Drupal\Core\Language\LanguageManagerInterface instead.
+ *
+ * @see https://www.drupal.org/node/3531600
  */
 function _ckeditor5_get_langcode_mapping($lang = FALSE) {
-  // Cache the file system based language list calculation because this would
-  // be expensive to calculate all the time. The cache is cleared on core
-  // upgrades which is the only situation the CKEditor file listing should
-  // change.
-  $langcode_cache = \Drupal::cache()->get('ckeditor5.langcodes');
-  if (!empty($langcode_cache)) {
-    $langcodes = $langcode_cache->data;
-  }
-  if (empty($langcodes)) {
-    $langcodes = [];
-    // Collect languages included with CKEditor 5 based on file listing.
-    $files = scandir('core/assets/vendor/ckeditor5/ckeditor5-dll/translations');
-    foreach ($files as $file) {
-      if (str_ends_with($file, '.js')) {
-        $langcode = basename($file, '.js');
-        $langcodes[$langcode] = $langcode;
-      }
-    }
-    \Drupal::cache()->set('ckeditor5.langcodes', $langcodes);
-  }
-
-  // Get language mapping if available to map to Drupal language codes.
-  // This is configurable in the user interface and not expensive to get, so
-  // we don't include it in the cached language list.
-  $language_mappings = \Drupal::moduleHandler()->moduleExists('language') ? language_get_browser_drupal_langcode_mappings() : [];
-  foreach ($langcodes as $langcode) {
-    // If this language code is available in a Drupal mapping, use that to
-    // compute a possibility for matching from the Drupal langcode to the
-    // CKEditor langcode.
-    // For instance, CKEditor uses the langcode 'no' for Norwegian, Drupal
-    // uses 'nb'. This would then remove the 'no' => 'no' mapping and
-    // replace it with 'nb' => 'no'. Now Drupal knows which CKEditor
-    // translation to load.
-    if (isset($language_mappings[$langcode]) && !isset($langcodes[$language_mappings[$langcode]])) {
-      $langcodes[$language_mappings[$langcode]] = $langcode;
-      unset($langcodes[$langcode]);
-    }
-  }
+  @trigger_error('_ckeditor5_get_langcode_mapping() is deprecated in drupal:11.3.0 and is removed from drupal:13.0.0. Use \Drupal\Core\Language\LanguageManagerInterface instead. See https://www.drupal.org/node/3531600', E_USER_DEPRECATED);
   if ($lang) {
-    return $langcodes[$lang] ?? 'en';
+    return \Drupal::service(LanguageManagerInterface::class)->getMapping($lang);
   }
-  return $langcodes;
+  else {
+    return \Drupal::service(LanguageManagerInterface::class)->getMappings();
+  }
 }
 
 /**

@@ -6,13 +6,16 @@ namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Url;
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * JSON:API integration test for the "EntityFormDisplay" config entity type.
- *
- * @group jsonapi
  */
+#[Group('jsonapi')]
+#[RunTestsInSeparateProcesses]
 class EntityFormDisplayTest extends ConfigEntityResourceTestBase {
 
   /**
@@ -80,10 +83,10 @@ class EntityFormDisplayTest extends ConfigEntityResourceTestBase {
       'jsonapi' => [
         'meta' => [
           'links' => [
-            'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+            'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
           ],
         ],
-        'version' => '1.0',
+        'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
       ],
       'links' => [
         'self' => ['href' => $self_url],
@@ -104,15 +107,6 @@ class EntityFormDisplayTest extends ConfigEntityResourceTestBase {
               'settings' => [],
               'third_party_settings' => [],
             ],
-            'promote' => [
-              'type' => 'boolean_checkbox',
-              'settings' => [
-                'display_label' => TRUE,
-              ],
-              'weight' => 15,
-              'region' => 'content',
-              'third_party_settings' => [],
-            ],
             'status' => [
               'type' => 'boolean_checkbox',
               'weight' => 120,
@@ -120,15 +114,6 @@ class EntityFormDisplayTest extends ConfigEntityResourceTestBase {
               'settings' => [
                 'display_label' => TRUE,
               ],
-              'third_party_settings' => [],
-            ],
-            'sticky' => [
-              'type' => 'boolean_checkbox',
-              'settings' => [
-                'display_label' => TRUE,
-              ],
-              'weight' => 16,
-              'region' => 'content',
               'third_party_settings' => [],
             ],
             'title' => [
@@ -159,7 +144,10 @@ class EntityFormDisplayTest extends ConfigEntityResourceTestBase {
               'node.type.camelids',
             ],
           ],
-          'hidden' => [],
+          'hidden' => [
+            'promote' => TRUE,
+            'sticky' => TRUE,
+          ],
           'langcode' => 'en',
           'mode' => 'default',
           'status' => NULL,

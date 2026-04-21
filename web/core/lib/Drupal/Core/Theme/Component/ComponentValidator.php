@@ -82,6 +82,14 @@ class ComponentValidator {
       $schema['properties'] = new \stdClass();
     }
 
+    // If a slot has an empty definition,
+    // force casting to object instead of array.
+    foreach ($definition['slots'] ?? [] as $slot_name => $slot) {
+      if ($slot === []) {
+        $definition['slots'][$slot_name] = new \stdClass();
+      }
+    }
+
     // Ensure that all property types are strings. For example, a null value
     // will not automatically convert to 'null', which will lead to a PHP error
     // that is hard to trace back to the property.
@@ -123,6 +131,7 @@ class ComponentValidator {
     );
 
     $definition_object = Validator::arrayToObjectRecursive($definition);
+    $this->validator->reset();
     $this->validator->validate(
       $definition_object,
       (object) ['$ref' => 'file://' . dirname(__DIR__, 5) . '/assets/schemas/v1/metadata-full.schema.json']
@@ -135,6 +144,7 @@ class ComponentValidator {
       $this->validator->getErrors()
     );
     $message_parts = [
+      sprintf('In component %s:', $definition['id']),
       ...$message_parts,
       ...$missing_class_errors,
     ];
@@ -188,17 +198,19 @@ class ComponentValidator {
     ] = $this->validateClassProps($schema, $props_raw, $component_id);
     $schema = Validator::arrayToObjectRecursive($schema);
     $props = Validator::arrayToObjectRecursive($props_raw);
-    $validator = new Validator();
-    $validator->validate($props, $schema, Constraint::CHECK_MODE_TYPE_CAST);
-    $validator->getErrors();
-    if ($validator->isValid()) {
+    $this->validator->reset();
+    $this->validator->validate($props, $schema, Constraint::CHECK_MODE_TYPE_CAST);
+    $this->validator->getErrors();
+    if ($this->validator->isValid()) {
       return TRUE;
     }
     // Dismiss type errors if the prop received a render array.
     $errors = array_filter(
-      $validator->getErrors(),
+      $this->validator->getErrors(),
       function (array $error) use ($context): bool {
-        if (($error['constraint'] ?? '') !== 'type') {
+        // Support 5.0 ($error['constraint']) and 6.0
+        // ($error['constraint']['name']) at the same time.
+        if (($error['constraint']['name'] ?? $error['constraint'] ?? '') !== 'type') {
           return TRUE;
         }
         return !Element::isRenderArray($context[$error['property']] ?? NULL);

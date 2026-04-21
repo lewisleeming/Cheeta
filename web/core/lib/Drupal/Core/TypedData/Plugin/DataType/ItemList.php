@@ -19,6 +19,10 @@ use Drupal\Core\TypedData\TypedDataInterface;
  * Drupal\Core\TypedData\Annotation\DataType.
  * Note: The class cannot be called "List" as list is a reserved PHP keyword.
  *
+ * @template T of \Drupal\Core\TypedData\TypedDataInterface
+ * @implements \IteratorAggregate<int, T>
+ * @implements \Drupal\Core\TypedData\ListInterface<T>
+ *
  * @ingroup typed_data
  */
 #[DataType(
@@ -217,6 +221,7 @@ class ItemList extends TypedData implements \IteratorAggregate, ListInterface {
    * Helper for creating a list item object.
    *
    * @return \Drupal\Core\TypedData\TypedDataInterface
+   *   The new property instance.
    */
   protected function createItem($offset = 0, $value = NULL) {
     return $this->getTypedDataManager()->getPropertyInstance($this, $offset, $value);

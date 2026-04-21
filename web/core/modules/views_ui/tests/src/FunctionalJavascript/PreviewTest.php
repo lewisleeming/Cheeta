@@ -8,12 +8,14 @@ use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Database\Database;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\views\Tests\ViewTestData;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the UI preview functionality.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class PreviewTest extends WebDriverTestBase {
 
   /**
@@ -67,7 +69,8 @@ class PreviewTest extends WebDriverTestBase {
    * using it, it cannot be enabled normally.
    */
   protected function enableViewsTestModule(): void {
-    // Define the schema and views data variable before enabling the test module.
+    // Define the schema and views data variable before enabling the test
+    // module.
     \Drupal::state()->set('views_test_data_schema', $this->schemaDefinition());
     \Drupal::state()->set('views_test_data_views_data', $this->viewsData());
 

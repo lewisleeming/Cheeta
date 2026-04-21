@@ -206,7 +206,7 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    *
    * @var array
    */
-  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName, Drupal.Commenting.VariableComment.Missing
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $migration_tags = [];
 
   /**
@@ -226,6 +226,8 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    * These are different from the configuration dependencies. Migration
    * dependencies are only used to store relationships between migrations.
    *
+   * @var array
+   *
    * The migration_dependencies value is structured like this:
    * @code
    * [
@@ -238,10 +240,8 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    *   ],
    * ];
    * @endcode
-   *
-   * @var array
    */
-  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName, Drupal.Commenting.VariableComment.Missing
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $migration_dependencies = [];
 
   /**
@@ -621,6 +621,34 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
   }
 
   /**
+   * Add required migration dependencies.
+   *
+   * @param string[] $required_dependencies
+   *   An array of migration IDs to be added to the required migration
+   *   dependencies.
+   *
+   * @return $this
+   */
+  public function addRequiredDependencies(array $required_dependencies): MigrationInterface {
+    $this->migration_dependencies['required'] = array_unique(array_merge($this->migration_dependencies['required'], $required_dependencies));
+    return $this;
+  }
+
+  /**
+   * Add optional migration dependencies.
+   *
+   * @param string[] $optional_dependencies
+   *   An array of migration IDs to be added to the optional migration
+   *   dependencies.
+   *
+   * @return $this
+   */
+  public function addOptionalDependencies(array $optional_dependencies): MigrationInterface {
+    $this->migration_dependencies['optional'] = array_unique(array_merge($this->migration_dependencies['optional'], $optional_dependencies));
+    return $this;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function mergeProcessOfProperty($property, array $process_of_property) {
@@ -628,7 +656,10 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
     // otherwise simply set it.
     $current_process = $this->getProcess();
     if (isset($current_process[$property])) {
-      $this->process = NestedArray::mergeDeepArray([$current_process, $this->getProcessNormalized([$property => $process_of_property])], TRUE);
+      $this->process = NestedArray::mergeDeepArray([
+        $current_process,
+        $this->getProcessNormalized([$property => $process_of_property]),
+      ], TRUE);
     }
     else {
       $this->setProcessOfProperty($property, $process_of_property);
@@ -645,7 +676,7 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    */
   public function getMigrationDependencies() {
     if (func_num_args() > 0) {
-      @trigger_error('Calling ' . __METHOD__ . ' with the $expand parameter is deprecated in drupal:11.0.0 and is removed drupal:12.0.0. See https://www.drupal.org/node/3442785', E_USER_DEPRECATED);
+      @trigger_error('Calling ' . __METHOD__ . ' with the $expand parameter is deprecated in drupal:11.0.0 and has no effect in drupal:12.0.0. See https://www.drupal.org/node/3442785', E_USER_DEPRECATED);
     }
 
     $this->migration_dependencies = ($this->migration_dependencies ?: []) + ['required' => [], 'optional' => []];

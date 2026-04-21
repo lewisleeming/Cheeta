@@ -258,13 +258,16 @@ interface WebformElementInterface extends PluginInspectionInterface, PluginFormI
   public function hasMultipleWrapper();
 
   /**
-   * Checks if the element value has multiple values.
+   * Returns information about the number of allowed values for an element.
    *
    * @param array $element
    *   An element.
    *
-   * @return bool
-   *   TRUE if the element value has multiple values.
+   * @return bool|int
+   *   TRUE if the element value allows an unlimited number of values. FALSE if
+   *   the element only allows a single value. If the element allows a limited
+   *   number of values, an integer indicating the number of allowed values is
+   *   returned.
    */
   public function hasMultipleValues(array $element);
 
@@ -321,7 +324,7 @@ interface WebformElementInterface extends PluginInspectionInterface, PluginFormI
    *
    * @param array $element
    *   An element.
-   * @param \Drupal\webform\WebformSubmissionInterface $webform_submission
+   * @param \Drupal\webform\WebformSubmissionInterface|null $webform_submission
    *   A webform submission. Webform submission is optional
    *   since it is not used by composite sub elements.
    *
@@ -334,7 +337,7 @@ interface WebformElementInterface extends PluginInspectionInterface, PluginFormI
    *
    * @param array $element
    *   An element.
-   * @param \Drupal\webform\WebformSubmissionInterface $webform_submission
+   * @param \Drupal\webform\WebformSubmissionInterface|null $webform_submission
    *   A webform submission. Webform submission is optional
    *   since it is not used by composite sub elements.
    *
@@ -362,7 +365,7 @@ interface WebformElementInterface extends PluginInspectionInterface, PluginFormI
    *   Usually "create", "update", or "view".
    * @param array $element
    *   An element.
-   * @param \Drupal\Core\Session\AccountInterface $account
+   * @param \Drupal\Core\Session\AccountInterface|null $account
    *   The user session for which to check access.
    *
    * @return bool
@@ -699,9 +702,6 @@ interface WebformElementInterface extends PluginInspectionInterface, PluginFormI
    *   The current state of the form.
    * @param array $export_options
    *   An associative array of default values.
-   *
-   * @return array
-   *   An associative array contain an element's export option webform.
    */
   public function buildExportOptionsForm(array &$form, FormStateInterface $form_state, array $export_options);
 

@@ -6,6 +6,7 @@ namespace Drupal\entity_test\Entity;
 
 use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider;
+use Drupal\Core\Entity\Routing\RevisionHtmlRouteProvider;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -37,14 +38,21 @@ use Drupal\views\EntityViewsData;
       'delete' => EntityTestDeleteForm::class,
     ],
     'views_data' => EntityViewsData::class,
-    'route_provider' => ['html' => DefaultHtmlRouteProvider::class],
+    'route_provider' => [
+      'html' => DefaultHtmlRouteProvider::class,
+      'revision' => RevisionHtmlRouteProvider::class,
+    ],
   ],
   links: [
-    'add-form' => '/entity_test_mulrev/add',
+    'add-form' => '/entity_test_mulrev/add/{type}',
+    'add-page' => '/entity_test_mulrev/add',
     'canonical' => '/entity_test_mulrev/manage/{entity_test_mulrev}',
     'delete-form' => '/entity_test/delete/entity_test_mulrev/{entity_test_mulrev}',
     'edit-form' => '/entity_test_mulrev/manage/{entity_test_mulrev}/edit',
     'revision' => '/entity_test_mulrev/{entity_test_mulrev}/revision/{entity_test_mulrev_revision}/view',
+    'revision-delete-form' => '/entity_test_mulrev/{entity_test_mulrev}/revision/{entity_test_mulrev_revision}/delete',
+    'revision-revert-form' => '/entity_test_mulrev/{entity_test_mulrev}/revision/{entity_test_mulrev_revision}/revert',
+    'version-history' => '/entity_test_mulrev/{entity_test_mulrev}/revisions',
   ],
   admin_permission: 'administer entity_test content',
   base_table: 'entity_test_mulrev',

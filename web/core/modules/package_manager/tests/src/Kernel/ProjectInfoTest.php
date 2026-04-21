@@ -6,16 +6,23 @@ namespace Drupal\Tests\package_manager\Kernel;
 
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\package_manager\ProjectInfo;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\package_manager\ProjectInfo
- * @group auto_updates
+ * Tests Drupal\package_manager\ProjectInfo.
+ *
  * @internal
  */
+#[CoversClass(ProjectInfo::class)]
+#[Group('auto_updates')]
+#[RunTestsInSeparateProcesses]
 class ProjectInfoTest extends PackageManagerKernelTestBase {
 
   /**
-   * @covers ::getInstallableReleases
+   * Tests get installable releases.
    *
    * @param string $fixture
    *   The fixture file name.
@@ -23,9 +30,8 @@ class ProjectInfoTest extends PackageManagerKernelTestBase {
    *   The installed version core version to set.
    * @param string[] $expected_versions
    *   The expected versions.
-   *
-   * @dataProvider providerGetInstallableReleases
    */
+  #[DataProvider('providerGetInstallableReleases')]
   public function testGetInstallableReleases(string $fixture, string $installed_version, array $expected_versions): void {
     [$project] = explode('.', $fixture);
     $fixtures_directory = __DIR__ . '/../../fixtures/release-history/';
@@ -39,11 +45,11 @@ class ProjectInfoTest extends PackageManagerKernelTestBase {
         'version' => $installed_version,
         'project' => 'package_manager_test_update',
       ];
-      // @todo Replace with use of the trait from the Update module in https://drupal.org/i/3348234.
+      // @todo Replace with use of the trait from the Update Status module in https://drupal.org/i/3348234.
       $this->config('update_test.settings')
         ->set("system_info.$project", $extension_info_update)
         ->save();
-      // The Update module will always request Drupal core's update XML.
+      // The Update Status module will always request Drupal core's update XML.
       $metadata_fixtures['drupal'] = $fixtures_directory . 'drupal.9.8.2.xml';
     }
     $metadata_fixtures[$project] = "$fixtures_directory$fixture";
@@ -138,8 +144,8 @@ class ProjectInfoTest extends PackageManagerKernelTestBase {
     $this->assertSame(['drupal'], array_keys($available));
     $this->setReleaseMetadata($metadata_fixtures);
     $state = $this->container->get('state');
-    // Set the state that the update module uses to store last checked time
-    // ensure our calls do not affect it.
+    // Set the state that the Update Status module uses to store last checked
+    // time ensure our calls do not affect it.
     $state->set('update.last_check', 123);
     $project_info = new ProjectInfo('package_manager_test_update');
     $project_data = $project_info->getProjectInfo();
@@ -168,8 +174,8 @@ class ProjectInfoTest extends PackageManagerKernelTestBase {
       array_keys($project_info->getInstallableReleases())
     );
     $this->assertNull($project_info->getInstalledVersion());
-    // Ensure we have not changed the state the update module uses to store
-    // the last checked time.
+    // Ensure we have not changed the state the Update Status module uses to
+    // store the last checked time.
     $this->assertSame(123, $state->get('update.last_check'));
 
     $this->assertTrue($this->failureLogger->hasRecordThatContains('Invalid project format: Array', (string) RfcLogLevel::ERROR));
@@ -181,7 +187,7 @@ class ProjectInfoTest extends PackageManagerKernelTestBase {
   /**
    * Tests a project with a status other than "published".
    *
-   * @covers ::getInstallableReleases
+   * @legacy-covers ::getInstallableReleases
    */
   public function testNotPublishedProject(): void {
     $this->setReleaseMetadata(['drupal' => __DIR__ . '/../../fixtures/release-history/drupal.9.8.2_unknown_status.xml']);
@@ -240,10 +246,9 @@ class ProjectInfoTest extends PackageManagerKernelTestBase {
    *   Whether the installed version of the project is expected to be found
    *   safe.
    *
-   * @covers ::isInstalledVersionSafe
-   *
-   * @dataProvider providerInstalledVersionSafe
+   * @legacy-covers ::isInstalledVersionSafe
    */
+  #[DataProvider('providerInstalledVersionSafe')]
   public function testInstalledVersionSafe(string $installed_version, string $release_xml, bool $expected_to_be_safe): void {
     $this->setCoreVersion($installed_version);
     $this->setReleaseMetadata(['drupal' => $release_xml]);
@@ -285,15 +290,14 @@ class ProjectInfoTest extends PackageManagerKernelTestBase {
   }
 
   /**
-   * @covers ::getSupportedBranches
+   * Tests get supported branches.
    *
    * @param string $release_xml
    *   The path of the release metadata.
    * @param string[] $expected_supported_branches
    *   The expected supported branches.
-   *
-   * @dataProvider providerGetSupportedBranches
    */
+  #[DataProvider('providerGetSupportedBranches')]
   public function testGetSupportedBranches(string $release_xml, array $expected_supported_branches): void {
     $this->setReleaseMetadata(['drupal' => $release_xml]);
     $project_info = new ProjectInfo('drupal');

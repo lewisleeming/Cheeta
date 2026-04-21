@@ -6,17 +6,22 @@ namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\TypedData\TranslationStatusInterface;
+use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\entity_test\Entity\EntityTestMulRev;
+use Drupal\entity_test\EntityTestHelper;
+use Drupal\entity_test\EntityTestTypesFilter;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests entity translation functionality.
- *
- * @group Entity
  */
+#[Group('Entity')]
+#[RunTestsInSeparateProcesses]
 class EntityTranslationTest extends EntityLanguageTestBase {
 
   /**
@@ -24,7 +29,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
    */
   public function testEntityLanguageMethods(): void {
     // All entity variations have to have the same results.
-    foreach (entity_test_entity_types() as $entity_type) {
+    foreach (EntityTestHelper::getEntityTypes() as $entity_type) {
       $this->doTestEntityLanguageMethods($entity_type);
     }
   }
@@ -144,7 +149,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
    */
   public function testMultilingualProperties(): void {
     // Test all entity variations with data table support.
-    foreach (entity_test_entity_types(ENTITY_TEST_TYPES_MULTILINGUAL) as $entity_type) {
+    foreach (EntityTestHelper::getEntityTypes(EntityTestTypesFilter::Multilingual) as $entity_type) {
       $this->doTestMultilingualProperties($entity_type);
     }
   }
@@ -166,7 +171,11 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     // as language neutral.
     $storage = $this->container->get('entity_type.manager')
       ->getStorage($entity_type);
-    $entity = $storage->create(['name' => $name, 'user_id' => $uid, $langcode_key => LanguageInterface::LANGCODE_NOT_SPECIFIED]);
+    $entity = $storage->create([
+      'name' => $name,
+      'user_id' => $uid,
+      $langcode_key => LanguageInterface::LANGCODE_NOT_SPECIFIED,
+    ]);
     $entity->save();
     $entity = $storage->load($entity->id());
     $default_langcode = $entity->language()->getId();
@@ -264,9 +273,16 @@ class EntityTranslationTest extends EntityLanguageTestBase {
 
     $entities = $storage->loadByProperties([$langcode_key => $langcode, 'name' => $properties[$langcode]['name'][0]]);
     $this->assertCount(0, $entities, "$entity_type: No entity loaded by name translation specifying the translation language.");
-    $entities = $storage->loadByProperties([$langcode_key => $langcode, 'name' => $properties[$langcode]['name'][0], $default_langcode_key => 0]);
+    $entities = $storage->loadByProperties([
+      $langcode_key => $langcode,
+      'name' => $properties[$langcode]['name'][0],
+      $default_langcode_key => 0,
+    ]);
     $this->assertCount(1, $entities, "$entity_type: One entity loaded by name translation and language specifying to look for translations.");
-    $entities = $storage->loadByProperties(['user_id' => $properties[$langcode]['user_id'][0], $default_langcode_key => NULL]);
+    $entities = $storage->loadByProperties([
+      'user_id' => $properties[$langcode]['user_id'][0],
+      $default_langcode_key => NULL,
+    ]);
     $this->assertCount(2, $entities, "$entity_type: Two entities loaded by uid without caring about property translatability.");
 
     // Test property conditions and orders with multiple languages in the same
@@ -307,7 +323,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
    */
   public function testEntityTranslationAPI(): void {
     // Test all entity variations with data table support.
-    foreach (entity_test_entity_types(ENTITY_TEST_TYPES_MULTILINGUAL) as $entity_type) {
+    foreach (EntityTestHelper::getEntityTypes(EntityTestTypesFilter::Multilingual) as $entity_type) {
       $this->doTestEntityTranslationAPI($entity_type);
     }
   }
@@ -547,8 +563,8 @@ class EntityTranslationTest extends EntityLanguageTestBase {
 
     // Check that per-language defaults are properly populated. The
     // 'entity_test_mul_default_value' entity type is translatable and uses
-    // entity_test_field_default_value() as a "default value callback" for its
-    // 'description' field.
+    // \Drupal\entity_test\Entity\EntityTestDefaultValue::descriptionDefaultValue()
+    // as a "default value callback" for its 'description' field.
     $entity = $this->entityTypeManager
       ->getStorage('entity_test_mul_default_value')
       ->create(['name' => $this->randomMachineName(), 'langcode' => $langcode]);
@@ -575,7 +591,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
    */
   public function testLanguageFallback(): void {
     // Test all entity variations with data table support.
-    foreach (entity_test_entity_types(ENTITY_TEST_TYPES_MULTILINGUAL) as $entity_type) {
+    foreach (EntityTestHelper::getEntityTypes(EntityTestTypesFilter::Multilingual) as $entity_type) {
       $this->doTestLanguageFallback($entity_type);
     }
   }
@@ -716,7 +732,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
    */
   public function testLanguageChange(): void {
     // Test all entity variations with data table support.
-    foreach (entity_test_entity_types(ENTITY_TEST_TYPES_MULTILINGUAL) as $entity_type) {
+    foreach (EntityTestHelper::getEntityTypes(EntityTestTypesFilter::Multilingual) as $entity_type) {
       $this->doTestLanguageChange($entity_type);
     }
   }
@@ -793,6 +809,61 @@ class EntityTranslationTest extends EntityLanguageTestBase {
       $adapter = $entity->getTranslation($langcode)->getTypedData();
       $name = $adapter->get('name')->value;
       $this->assertEquals($values[$langcode]['name'], $name, "Name correctly retrieved from '$langcode' adapter");
+    }
+  }
+
+  /**
+   * Tests the entity constructor works with translations.
+   */
+  public function testEntityConstructor(): void {
+    $default_langcode = $this->languageManager->getDefaultLanguage()->getId();
+    $langcodes = array_unique(array_merge($this->langcodes ?? [], [$default_langcode]));
+    $this->assertGreaterThan(1, count($langcodes));
+
+    $bundle = $this->randomMachineName();
+    EntityTestHelper::createBundle($bundle);
+
+    $field_name = strtolower($this->randomMachineName());
+
+    $field_storage = FieldStorageConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => 'entity_test',
+      'type' => 'text',
+      'cardinality' => 1,
+    ]);
+    $field_storage->save();
+
+    $field_config = FieldConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => 'entity_test',
+      'bundle' => $bundle,
+      'translatable' => TRUE,
+    ]);
+    $field_config->save();
+
+    $values = [];
+    foreach ($langcodes as $langcode) {
+      $index = $langcode == $default_langcode ? LanguageInterface::LANGCODE_DEFAULT : $langcode;
+      $values[$field_name][$index][0]['value'] = $this->randomString();
+    }
+
+    $entity = new EntityTest($values, 'entity_test', $bundle, $langcodes);
+    $expected_languages = array_flip($langcodes);
+
+    foreach ($entity->getTranslationLanguages() as $language) {
+      /** @var \Drupal\Core\Language\LanguageInterface $language */
+      $this->assertTrue(isset($expected_languages[$language->getId()]));
+      unset($expected_languages[$language->getId()]);
+    }
+
+    $this->assertEmpty($expected_languages);
+
+    foreach ($langcodes as $langcode) {
+      $index = $langcode == $default_langcode ? LanguageInterface::LANGCODE_DEFAULT : $langcode;
+      $this->assertEquals(
+        $entity->getTranslation($langcode)->$field_name->value,
+        $values[$field_name][$index][0]['value']
+      );
     }
   }
 
@@ -946,7 +1017,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $entity = $storage->load($entity->id());
     $this->assertEquals(TranslationStatusInterface::TRANSLATION_EXISTING, $entity->getTranslationStatus($entity->language()->getId()));
 
-    foreach ($this->langcodes as $key => $langcode) {
+    foreach ($this->langcodes as $langcode) {
       // Test that after adding a new translation it has the translation status
       // TRANSLATION_CREATED.
       $entity->addTranslation($langcode, $values);

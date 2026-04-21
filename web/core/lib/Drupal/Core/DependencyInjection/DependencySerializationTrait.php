@@ -16,7 +16,7 @@ trait DependencySerializationTrait {
    *
    * @var array
    */
-  // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName, Drupal.Commenting.VariableComment.Missing
+  // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $_serviceIds = [];
 
   /**
@@ -24,7 +24,7 @@ trait DependencySerializationTrait {
    *
    * @var array
    */
-  // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName, Drupal.Commenting.VariableComment.Missing
+  // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $_entityStorages = [];
 
   /**
@@ -53,8 +53,8 @@ trait DependencySerializationTrait {
         }
         elseif ($service_id = $reverse_container->getId($value)) {
           // If a class member was instantiated by the dependency injection
-          // container, only store its ID so it can be used to get a fresh object
-          // on unserialization.
+          // container, only store its ID so it can be used to get a fresh
+          // object on unserialization.
           $this->_serviceIds[$key] = $service_id;
           unset($vars[$key]);
         }

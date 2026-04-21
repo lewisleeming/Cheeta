@@ -15,20 +15,26 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\editor\EditorInterface;
 use Drupal\Tests\ckeditor5\Traits\PrivateMethodUnitTestTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Psr\Log\LoggerInterface;
 
 /**
- * @coversDefaultClass \Drupal\ckeditor5\SmartDefaultSettings
- * @group ckeditor5
+ * Tests Drupal\ckeditor5\SmartDefaultSettings.
  */
+#[CoversClass(SmartDefaultSettings::class)]
+#[Group('ckeditor5')]
 class SmartDefaultSettingsTest extends UnitTestCase {
 
   use PrivateMethodUnitTestTrait;
 
   /**
-   * @covers ::computeSurplusScore
-   * @dataProvider providerSurplusScore
+   * Tests surplus score.
+   *
+   * @legacy-covers ::computeSurplusScore
    */
+  #[DataProvider('providerSurplusScore')]
   public function testSurplusScore(HTMLRestrictions $surplus, HTMLRestrictions $needed, int $expected): void {
     $method = self::getMethod(SmartDefaultSettings::class, 'computeSurplusScore');
     $this->assertSame($expected, $method->invoke(NULL, $surplus, $needed));
@@ -38,6 +44,7 @@ class SmartDefaultSettingsTest extends UnitTestCase {
    * Data provider for testing computeSurplusScore().
    *
    * @return \Generator
+   *   Yields the data for testSurplusScore().
    */
   public static function providerSurplusScore(): \Generator {
     $needed = new HTMLRestrictions(['code' => FALSE]);
@@ -81,10 +88,12 @@ class SmartDefaultSettingsTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getCandidates
-   * @covers ::selectCandidate
-   * @dataProvider providerCandidates
+   * Tests candidates.
+   *
+   * @legacy-covers ::getCandidates
+   * @legacy-covers ::selectCandidate
    */
+  #[DataProvider('providerCandidates')]
   public function testCandidates(HTMLRestrictions $provided, HTMLRestrictions $still_needed, array $disabled_plugin_definitions, array $expected_candidates, array $expected_selection = []): void {
     $get_candidates = self::getMethod(SmartDefaultSettings::class, 'getCandidates');
     $smart_default_settings = new SmartDefaultSettings(
@@ -103,6 +112,7 @@ class SmartDefaultSettingsTest extends UnitTestCase {
    * Data provider for testing getCandidates() and ::selectCandidate().
    *
    * @return \Generator
+   *   Yields the data for testCandidates().
    */
   public static function providerCandidates(): \Generator {
     $generate_definition = function (string $label_and_id, array $overrides): CKEditor5PluginDefinition {

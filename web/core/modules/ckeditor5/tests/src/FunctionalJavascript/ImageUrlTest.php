@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
+use Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
- * @coversDefaultClass \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image
- * @group ckeditor5
- * @group #slow
+ * Tests Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image.
+ *
  * @internal
  */
+#[CoversClass(Image::class)]
+#[Group('ckeditor5')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class ImageUrlTest extends ImageUrlTestBase {
   use ImageTestBaselineTrait;
 
@@ -30,7 +38,7 @@ class ImageUrlTest extends ImageUrlTestBase {
     $dialog = $page->find('css', '.ck-dialog');
     $src_input = $dialog->find('css', '.ck-image-insert-url input[type=text]');
     $src_input->setValue($src);
-    $dialog->find('xpath', "//button[span[text()='Accept']]")->click();
+    $dialog->find('xpath', "//button[span[text()='Insert']]")->click();
 
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', $image_selector));
     $this->click($image_selector);

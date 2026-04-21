@@ -6,12 +6,14 @@ namespace Drupal\Tests\user\Functional;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests user logout.
- *
- * @group user
  */
+#[Group('user')]
+#[RunTestsInSeparateProcesses]
 class UserLogoutTest extends BrowserTestBase {
 
   /**
@@ -50,6 +52,9 @@ class UserLogoutTest extends BrowserTestBase {
     $this->drupalGet($logoutUrl, ['query' => ['token' => '123']]);
     $this->assertTrue($this->drupalUserIsLoggedIn($account));
     $this->assertSession()->addressEquals($confirmUrl);
+    // Test to ensure the text 'This action cannot be undone.' is not
+    // present on the page.
+    $this->assertSession()->pageTextNotContains('This action cannot be undone.');
     // Submitting the confirmation form correctly logs the user out.
     $this->submitForm([], 'Log out');
     $this->assertFalse($this->drupalUserIsLoggedIn($account));

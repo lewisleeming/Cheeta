@@ -12,12 +12,14 @@ use Drupal\filter\Entity\FilterFormat;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\node\Entity\NodeType;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the inline errors fragment link to a CKEditor5-enabled textarea.
- *
- * @group ckeditor5
  */
+#[Group('ckeditor5')]
+#[RunTestsInSeparateProcesses]
 class FormErrorHandlerCKEditor5Test extends WebDriverTestBase {
 
   /**
@@ -64,7 +66,7 @@ class FormErrorHandlerCKEditor5Test extends WebDriverTestBase {
       'field_storage' => $field_storage,
       'bundle' => 'page',
       'label' => 'Body',
-      'settings' => ['display_summary' => TRUE],
+      'settings' => [],
       'required' => TRUE,
     ])->save();
 
@@ -74,7 +76,7 @@ class FormErrorHandlerCKEditor5Test extends WebDriverTestBase {
       'bundle' => 'page',
       'mode' => 'default',
       'status' => TRUE,
-    ])->setComponent('body', ['type' => 'text_textarea_with_summary'])
+    ])->setComponent('body', ['type' => 'text_textarea'])
       ->save();
 
     $account = $this->drupalCreateUser([
@@ -118,7 +120,8 @@ class FormErrorHandlerCKEditor5Test extends WebDriverTestBase {
     $errors_link->click();
 
     // Check that the CKEditor5-enabled body field is visible in the viewport.
-    // The hash change adds an ID to the CKEditor 5 instance so check its visibility using the ID now.
+    // The hash change adds an ID to the CKEditor 5 instance so check its
+    // visibility using the ID now.
     $web_assert->assertVisibleInViewport('css', $ckeditor_id, 'topLeft', 'CKEditor5-enabled body field is visible.');
   }
 

@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\package_manager\Kernel\PathExcluder;
 
+use Drupal\package_manager\PathExcluder\TestSiteExcluder;
 use Drupal\package_manager\PathLocator;
 use Drupal\Tests\package_manager\Kernel\PackageManagerKernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @covers \Drupal\package_manager\PathExcluder\TestSiteExcluder
- * @group package_manager
+ * Tests Site Excluder.
+ *
  * @internal
  */
+#[Group('package_manager')]
+#[CoversClass(TestSiteExcluder::class)]
+#[RunTestsInSeparateProcesses]
 class TestSiteExcluderTest extends PackageManagerKernelTestBase {
 
   /**
@@ -29,7 +36,7 @@ class TestSiteExcluderTest extends PackageManagerKernelTestBase {
     $stage = $this->createStage();
     $stage->create();
     $stage->require(['ext-json:*']);
-    $stage_dir = $stage->getStageDirectory();
+    $stage_dir = $stage->getSandboxDirectory();
 
     $excluded = [
       'sites/simpletest',

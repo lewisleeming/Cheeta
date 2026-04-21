@@ -83,7 +83,7 @@ class DrupalSelenium2Driver extends Selenium2Driver {
   /**
    * {@inheritdoc}
    */
-  public function click($xpath) {
+  public function click($xpath): void {
     /** @var \Exception $not_clickable_exception */
     $not_clickable_exception = NULL;
     $result = $this->waitFor(10, function () use (&$not_clickable_exception, $xpath) {
@@ -108,7 +108,7 @@ class DrupalSelenium2Driver extends Selenium2Driver {
   /**
    * {@inheritdoc}
    */
-  public function setValue($xpath, $value) {
+  public function setValue($xpath, $value): void {
     /** @var \Exception $not_clickable_exception */
     $not_clickable_exception = NULL;
     $result = $this->waitFor(10, function () use (&$not_clickable_exception, $xpath, $value) {
@@ -135,7 +135,8 @@ if (typeof Drupal !== 'undefined') {
   };
 }
 JS);
-        if (!is_string($value) && strtolower($element->name()) === 'input' && in_array(strtolower($element->attribute('type')), ['text', 'number', 'radio'], TRUE)) {
+        if (!is_string($value) && strtolower($element->name()) === 'input' &&
+          in_array(strtolower($element->attribute('type')), ['text', 'number', 'radio'], TRUE)) {
           // @todo Trigger deprecation in
           //   https://www.drupal.org/project/drupal/issues/3421105.
           $value = (string) $value;
@@ -190,7 +191,7 @@ JS);
   /**
    * {@inheritdoc}
    */
-  public function dragTo($sourceXpath, $destinationXpath) {
+  public function dragTo($sourceXpath, $destinationXpath): void {
     // Ensure both the source and destination exist at this point.
     $this->getWebDriverSession()->element('xpath', $sourceXpath);
     $this->getWebDriverSession()->element('xpath', $destinationXpath);

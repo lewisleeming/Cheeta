@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Drupal\Tests\Component\Graph;
 
 use Drupal\Component\Graph\Graph;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass \Drupal\Component\Graph\Graph
- * @group Graph
+ * Tests Drupal\Component\Graph\Graph.
  */
+#[CoversClass(Graph::class)]
+#[Group('Graph')]
 class GraphTest extends TestCase {
 
   /**
@@ -145,7 +148,8 @@ class GraphTest extends TestCase {
    * Verify expected components in a graph.
    *
    * @param array $graph
-   *   A graph array processed by \Drupal\Component\Graph\Graph::searchAndSort().
+   *   A graph array processed by
+   *   \Drupal\Component\Graph\Graph::searchAndSort().
    * @param array $expected_components
    *   An array containing of components defined as a list of their vertices.
    *

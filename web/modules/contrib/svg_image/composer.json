@@ -21,6 +21,6 @@
         "source": "https://git.drupalcode.org/project/svg_image"
     },
     "require": {
-        "enshrined/svg-sanitize": ">=0.15 <1.0"
+        "enshrined/svg-sanitize": ">=0.22 <1.0"
     }
 }

@@ -10,6 +10,7 @@ use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\StatementWrapperIterator;
 use Drupal\Core\Database\SupportsTemporaryTablesInterface;
 use Drupal\Core\Database\Transaction\TransactionManagerInterface;
+use Pdo\Mysql;
 
 /**
  * @addtogroup database
@@ -69,6 +70,8 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
    * {@inheritdoc}
    */
   public function __construct(\PDO $connection, array $connection_options) {
+    // @phpstan-ignore class.notFound
+    assert(\PHP_VERSION_ID >= 80400 ? $connection instanceof Mysql : TRUE);
     // If the SQL mode doesn't include 'ANSI_QUOTES' (explicitly or via a
     // combination mode), then MySQL doesn't interpret a double quote as an
     // identifier quote, in which case use the non-ANSI-standard backtick.
@@ -119,16 +122,21 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     ];
     $connection_options['pdo'] += [
       \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-      // So we don't have to mess around with cursors and unbuffered queries by default.
-      \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE,
+      // So we don't have to mess around with cursors and unbuffered queries by
+      // default.
+      // @phpstan-ignore class.notFound
+      (\PHP_VERSION_ID < 80400 ? \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY : Mysql::ATTR_USE_BUFFERED_QUERY) => TRUE,
       // Make sure MySQL returns all matched rows on update queries including
       // rows that actually didn't have to be updated because the values didn't
       // change. This matches common behavior among other database systems.
-      \PDO::MYSQL_ATTR_FOUND_ROWS => TRUE,
-      // Because MySQL's prepared statements skip the query cache, because it's dumb.
+      // @phpstan-ignore class.notFound
+      (\PHP_VERSION_ID < 80400 ? \PDO::MYSQL_ATTR_FOUND_ROWS : Mysql::ATTR_FOUND_ROWS) => TRUE,
+      // Because MySQL's prepared statements skip the query cache, because it's
+      // dumb.
       \PDO::ATTR_EMULATE_PREPARES => TRUE,
       // Limit SQL to a single statement like mysqli.
-      \PDO::MYSQL_ATTR_MULTI_STATEMENTS => FALSE,
+      // @phpstan-ignore class.notFound
+      (\PHP_VERSION_ID < 80400 ? \PDO::MYSQL_ATTR_MULTI_STATEMENTS : Mysql::ATTR_MULTI_STATEMENTS) => FALSE,
       // Convert numeric values to strings when fetching. In PHP 8.1,
       // \PDO::ATTR_EMULATE_PREPARES now behaves the same way as non emulated
       // prepares and returns integers. See https://externals.io/message/113294
@@ -137,7 +145,13 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     ];
 
     try {
-      $pdo = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+      if (\PHP_VERSION_ID >= 80400) {
+        // @phpstan-ignore class.notFound
+        $mysql = new Mysql($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+      }
+      else {
+        $mysql = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+      }
     }
     catch (\PDOException $e) {
       switch ($e->getCode()) {
@@ -177,10 +191,10 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     // 'utf8mb4_general_ci' (MySQL 5) or 'utf8mb4_0900_ai_ci' (MySQL 8) for
     // utf8mb4.
     if (!empty($connection_options['collation'])) {
-      $pdo->exec('SET NAMES utf8mb4 COLLATE ' . $connection_options['collation']);
+      $mysql->exec('SET NAMES utf8mb4 COLLATE ' . $connection_options['collation']);
     }
     else {
-      $pdo->exec('SET NAMES utf8mb4');
+      $mysql->exec('SET NAMES utf8mb4');
     }
 
     // Set MySQL init_commands if not already defined.  Default Drupal's MySQL
@@ -206,12 +220,15 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
 
     // Execute initial commands.
     foreach ($connection_options['init_commands'] as $sql) {
-      $pdo->exec($sql);
+      $mysql->exec($sql);
     }
 
-    return $pdo;
+    return $mysql;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function queryRange($query, $from, $count, array $args = [], array $options = []) {
     return $this->query($query . ' LIMIT ' . (int) $from . ', ' . (int) $count, $args, $options);
   }
@@ -225,6 +242,9 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     return $tablename;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function driver() {
     return 'mysql';
   }
@@ -279,6 +299,9 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     return $this->serverVersion;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function databaseType() {
     return 'mysql';
   }
@@ -305,6 +328,9 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function mapConditionOperator($operator) {
     // We don't want to override any of the defaults.
     return NULL;

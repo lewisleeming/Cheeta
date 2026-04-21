@@ -58,7 +58,15 @@ id: content_index
 name: 'content index'
 description: ''
 read_only: false
-field_settings: {  }
+field_settings:
+  title:
+    label: Title
+    datasource_id: 'entity:node'
+    property_path: title
+    type: 'solr_text_custom:ngram'
+    dependencies:
+      module:
+        - node
 datasource_settings:
   'entity:node':
     bundles:

@@ -6,6 +6,7 @@ namespace Drupal\Core\Recipe;
 
 use Drupal\Core\DefaultContent\Finder;
 use Drupal\Core\Extension\Dependency;
+use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Component\Serialization\Yaml;
@@ -60,6 +61,8 @@ final class Recipe {
    *   The default content finder.
    * @param string $path
    *   The recipe's path.
+   * @param array $extra
+   *   Any extra information to expose to specific modules.
    */
   public function __construct(
     public readonly string $name,
@@ -71,6 +74,7 @@ final class Recipe {
     public readonly InputConfigurator $input,
     public readonly Finder $content,
     public readonly string $path,
+    private readonly array $extra,
   ) {}
 
   /**
@@ -90,7 +94,7 @@ final class Recipe {
     $config = new ConfigConfigurator($recipe_data['config'], $path, \Drupal::service('config.storage'));
     $input = new InputConfigurator($recipe_data['input'] ?? [], $recipes, basename($path), \Drupal::typedDataManager());
     $content = new Finder($path . '/content');
-    return new static($recipe_data['name'], $recipe_data['description'], $recipe_data['type'], $recipes, $install, $config, $input, $content, $path);
+    return new static($recipe_data['name'], $recipe_data['description'], $recipe_data['type'], $recipes, $install, $config, $input, $content, $path, $recipe_data['extra'] ?? []);
   }
 
   /**
@@ -205,11 +209,11 @@ final class Recipe {
                 ]),
               ],
               // The `prompt` and `form` elements, though optional, have their
-              // own sets of constraints,
+              // own sets of constraints.
               'prompt' => new Optional([
                 new Collection([
                   'method' => [
-                    new Choice(['ask', 'askHidden', 'confirm', 'choice']),
+                    new Choice(choices: ['ask', 'askHidden', 'confirm', 'choice']),
                   ],
                   'arguments' => new Optional([
                     new Type('associative_array'),
@@ -233,7 +237,7 @@ final class Recipe {
               'default' => new Required([
                 new Collection([
                   'source' => new Required([
-                    new Choice(['value', 'config']),
+                    new Choice(choices: ['value', 'config', 'env']),
                   ]),
                   'value' => new Optional(),
                   'config' => new Optional([
@@ -245,6 +249,13 @@ final class Recipe {
                         new NotBlank(),
                       ]),
                     ]),
+                  ]),
+                  // An optional fallback value if trying to get a default value
+                  // from a non-existent config object.
+                  'fallback' => new Optional(),
+                  'env' => new Optional([
+                    new Type('string'),
+                    new NotBlank(),
                   ]),
                 ]),
                 new Callback(self::validateDefaultValueDefinition(...)),
@@ -295,6 +306,12 @@ final class Recipe {
       ]),
       'content' => new Optional([
         new Type('array'),
+      ]),
+      'extra' => new Optional([
+        new Sequentially([
+          new Type('associative_array'),
+          new Callback(self::validateKeysAreValidExtensionNames(...)),
+        ]),
       ]),
     ]);
 
@@ -387,6 +404,13 @@ final class Recipe {
    */
   private static function validateConfigActions(mixed $value, ExecutionContextInterface $context, string $include_path): void {
     $config_name = str_replace(['[config][actions]', '[', ']'], '', $context->getPropertyPath());
+    // If this set of config actions is optional, we don't need to validate that
+    // it targets config belonging to a known extension -- the whole point of
+    // optional config actions is that the targeted entity (or the extension
+    // that provides it) might not exist, and that's okay.
+    if (str_starts_with($config_name, '?')) {
+      return;
+    }
     [$config_provider] = explode('.', $config_name);
     if ($config_provider === 'core') {
       return;
@@ -421,6 +445,42 @@ final class Recipe {
         '%config_provider' => $config_provider,
       ]);
     }
+  }
+
+  /**
+   * Validates that the keys of an array are valid extension names.
+   *
+   * Note that the keys do not have to be the names of extensions that are
+   * installed, or even extensions that exist. They just have to follow the
+   * form of a valid extension name.
+   *
+   * @param array $value
+   *   The array being validated.
+   * @param \Symfony\Component\Validator\Context\ExecutionContextInterface $context
+   *   The validator execution context.
+   */
+  private static function validateKeysAreValidExtensionNames(array $value, ExecutionContextInterface $context): void {
+    $keys = array_keys($value);
+    foreach ($keys as $key) {
+      if (!preg_match(ExtensionDiscovery::PHP_FUNCTION_PATTERN, $key)) {
+        $context->addViolation('%name is not a valid extension name.', [
+          '%name' => $key,
+        ]);
+      }
+    }
+  }
+
+  /**
+   * Returns extra information to expose to a particular extension.
+   *
+   * @param string $extension_name
+   *   The name of a Drupal extension.
+   *
+   * @return mixed
+   *   The extra data exposed to the given extension, or NULL if there is none.
+   */
+  public function getExtra(string $extension_name): mixed {
+    return $this->extra[$extension_name] ?? NULL;
   }
 
 }

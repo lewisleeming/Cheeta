@@ -6,20 +6,29 @@ namespace Drupal\Tests\package_manager\Kernel;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\package_manager\Exception\ApplyFailedException;
-use Drupal\package_manager\Exception\StageException;
+use Drupal\package_manager\Exception\SandboxException;
 use Drupal\package_manager\FailureMarker;
+use Drupal\package_manager\PackageManagerUninstallValidator;
+use Drupal\package_manager\SandboxManagerBase;
 use Drupal\package_manager_bypass\LoggingCommitter;
 use PhpTuf\ComposerStager\API\Exception\ExceptionInterface;
 use PhpTuf\ComposerStager\API\Exception\InvalidArgumentException;
 use PhpTuf\ComposerStager\API\Exception\PreconditionException;
 use PhpTuf\ComposerStager\API\Precondition\Service\PreconditionInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\package_manager\StageBase
- * @covers \Drupal\package_manager\PackageManagerUninstallValidator
- * @group package_manager
+ * Tests Drupal\package_manager\SandboxManagerBase.
+ *
  * @internal
  */
+#[CoversClass(SandboxManagerBase::class)]
+#[Group('package_manager')]
+#[CoversClass(PackageManagerUninstallValidator::class)]
+#[RunTestsInSeparateProcesses]
 class StageCommitExceptionTest extends PackageManagerKernelTestBase {
 
   /**
@@ -53,11 +62,11 @@ class StageCommitExceptionTest extends PackageManagerKernelTestBase {
       ],
       'InvalidArgumentException' => [
         InvalidArgumentException::class,
-        StageException::class,
+        SandboxException::class,
       ],
       'PreconditionException' => [
         PreconditionException::class,
-        StageException::class,
+        SandboxException::class,
       ],
       'Exception' => [
         'Exception',
@@ -73,9 +82,8 @@ class StageCommitExceptionTest extends PackageManagerKernelTestBase {
    *   The throwable class that should be thrown by Composer Stager.
    * @param string $expected_class
    *   The expected exception class, if different from $thrown_class.
-   *
-   * @dataProvider providerCommitException
    */
+  #[DataProvider('providerCommitException')]
   public function testCommitException(string $thrown_class, string $expected_class): void {
     $stage = $this->createStage();
     $stage->create();

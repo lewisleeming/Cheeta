@@ -8,8 +8,8 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Template\Attribute;
 use Drupal\filter\FilterFormatInterface;
+use Drupal\filter\Hook\FilterThemeHooks;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 
@@ -67,7 +67,7 @@ function filter_formats(?AccountInterface $account = NULL) {
  *
  * @see filter_formats()
  */
-function filter_formats_reset() {
+function filter_formats_reset(): void {
   drupal_static_reset('filter_formats');
 }
 
@@ -80,7 +80,7 @@ function filter_formats_reset() {
  * @return array
  *   An array of role names, keyed by role ID.
  */
-function filter_get_roles_by_format(FilterFormatInterface $format) {
+function filter_get_roles_by_format(FilterFormatInterface $format): array {
   // Handle the fallback format upfront (all roles have access to this format).
   if ($format->isFallbackFormat()) {
     return array_map(fn(RoleInterface $role) => $role->label(), Role::loadMultiple());
@@ -105,7 +105,7 @@ function filter_get_roles_by_format(FilterFormatInterface $format) {
  *   An array of text format objects that are allowed for the role, keyed by
  *   the text format ID and ordered by weight.
  */
-function filter_get_formats_by_role($rid) {
+function filter_get_formats_by_role($rid): array {
   $formats = [];
   foreach (filter_formats() as $format) {
     $roles = filter_get_roles_by_format($format);
@@ -258,7 +258,7 @@ function check_markup($text, $format_id = NULL, $langcode = '', $filter_types_to
  *   - tip: Tip text.
  *   - id: Filter ID.
  */
-function _filter_tips($format_id, $long = FALSE) {
+function _filter_tips($format_id, $long = FALSE): array {
   $formats = filter_formats(\Drupal::currentUser());
 
   $tips = [];
@@ -293,16 +293,15 @@ function _filter_tips($format_id, $long = FALSE) {
  * @param array $variables
  *   An associative array containing:
  *   - format: An object representing a text format.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
 function template_preprocess_filter_guidelines(&$variables): void {
-  $format = $variables['format'];
-  $variables['tips'] = [
-    '#theme' => 'filter_tips',
-    '#tips' => _filter_tips($format->id(), FALSE),
-  ];
-
-  // Add format id for filter.js.
-  $variables['attributes']['data-drupal-format-id'] = $format->id();
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FilterThemeHooks::class)->preprocessFilterGuidelines($variables);
 }
 
 /**
@@ -313,16 +312,15 @@ function template_preprocess_filter_guidelines(&$variables): void {
  * @param array $variables
  *   An associative array containing:
  *   - attributes: An associative array containing properties of the element.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
 function template_preprocess_text_format_wrapper(&$variables): void {
-  $variables['aria_description'] = FALSE;
-  // Add element class and id for screen readers.
-  if (isset($variables['attributes']['aria-describedby'])) {
-    $variables['aria_description'] = TRUE;
-    $variables['attributes']['id'] = $variables['attributes']['aria-describedby'];
-    // Remove aria-describedby attribute as it shouldn't be visible here.
-    unset($variables['attributes']['aria-describedby']);
-  }
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FilterThemeHooks::class)->preprocessTextFormatWrapper($variables);
 }
 
 /**
@@ -349,23 +347,15 @@ function template_preprocess_text_format_wrapper(&$variables): void {
  *     explanations, i.e. intended to be output on the path 'filter/tips'
  *     (TRUE), or are in a short format, i.e. suitable to be displayed below a
  *     form element. Defaults to FALSE.
+ *
+ * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial
+ *   template_preprocess functions are registered directly in hook_theme().
+ *
+ * @see https://www.drupal.org/node/3504125
  */
 function template_preprocess_filter_tips(&$variables): void {
-  $tips = $variables['tips'];
-
-  foreach ($variables['tips'] as $name => $tip_list) {
-    foreach ($tip_list as $tip_key => $tip) {
-      $tip_list[$tip_key]['attributes'] = new Attribute();
-    }
-
-    $variables['tips'][$name] = [
-      'attributes' => new Attribute(),
-      'name' => $name,
-      'list' => $tip_list,
-    ];
-  }
-
-  $variables['multiple'] = count($tips) > 1;
+  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Initial template_preprocess functions are registered directly in hook_theme(). See https://www.drupal.org/node/3504125', E_USER_DEPRECATED);
+  \Drupal::service(FilterThemeHooks::class)->preprocessFilterTips($variables);
 }
 
 /**
@@ -427,7 +417,8 @@ function _filter_url($text, $filter) {
   $valid_url_query_ending_chars = '[a-zA-Z0-9_&=#\/]';
 
   // Full path
-  // and allow @ in a URL, but only in the middle. Catch things like http://example.com/@user/
+  // and allow @ in a URL, but only in the middle. Catch things like
+  // http://example.com/@user/
   $valid_url_path = '(?:(?:' . $valid_url_path_characters . '*(?:' . $valid_url_balanced_parens . $valid_url_path_characters . '*)*' . $valid_url_ending_characters . ')|(?:@' . $valid_url_path_characters . '+\/))';
 
   // Prepare domain name pattern.
@@ -484,8 +475,8 @@ function _filter_url($text, $filter) {
         if ($chunk_type == 'text') {
           // Only process this text if there are no unclosed $ignore_tags.
           if ($open_tag == '') {
-            // If there is a match, inject a link into this chunk via the callback
-            // function contained in $task.
+            // If there is a match, inject a link into this chunk via the
+            // callback function contained in $task.
             $chunks[$i] = preg_replace_callback($pattern, $task, $chunks[$i]);
           }
           // Text chunk is done, so next chunk must be a tag.
@@ -513,7 +504,7 @@ function _filter_url($text, $filter) {
       $text = implode($chunks);
     }
 
-    // Revert to the original comment contents
+    // Revert to the original comment contents.
     _filter_url_escape_comments('', FALSE);
     $text = $text ? preg_replace_callback('`<!--(.*?)-->`', '_filter_url_escape_comments', $text) : $text;
   }
@@ -629,14 +620,14 @@ function _filter_url_trim($text, $length = NULL) {
  * Based on: http://photomatt.net/scripts/autop
  */
 function _filter_autop($text) {
-  // All block level tags
+  // All block level tags.
   $block = '(?:table|thead|tfoot|caption|col|colgroup|tbody|tr|td|th|div|dl|dd|dt|ul|ol|li|pre|select|option|form|map|area|blockquote|address|math|input|p|h[1-6]|fieldset|legend|hr|article|aside|details|figcaption|figure|footer|header|hgroup|menu|nav|section|summary)';
 
   // Split at opening and closing PRE, SCRIPT, STYLE, OBJECT, IFRAME tags
   // and comments. We don't apply any processing to the contents of these tags
   // to avoid messing up code. We look for matched pairs and allow basic
   // nesting. For example:
-  // "processed <pre> ignored <script> ignored </script> ignored </pre> processed"
+  // "processed<pre>ignored<script>ignored</script>ignored</pre>processed".
   $chunks = preg_split('@(<!--.*?-->|</?(?:pre|script|style|object|iframe|drupal-media|svg|!--)[^>]*>)@i', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
   // Note: PHP ensures the array consists of alternating delimiters and literals
   // and begins and ends with a literal (inserting NULL as required).
@@ -687,27 +678,28 @@ function _filter_autop($text) {
         }
       }
 
-      // Just to make things a little easier, pad the end
+      // Just to make things a little easier, pad the end.
       $chunk = preg_replace('|\n*$|', '', $chunk) . "\n\n";
       $chunk = preg_replace('|<br />\s*<br />|', "\n\n", $chunk);
-      // Space things out a little
+      // Space things out a little.
       $chunk = preg_replace('!(<' . $block . '[^>]*>)!', "\n$1", $chunk);
-      // Space things out a little
+      // Space things out a little.
       $chunk = preg_replace('!(</' . $block . '>)!', "$1\n\n", $chunk);
-      // Take care of duplicates
+      // Take care of duplicates.
       $chunk = preg_replace("/\n\n+/", "\n\n", $chunk);
       $chunk = preg_replace('/^\n|\n\s*\n$/', '', $chunk);
-      // Make paragraphs, including one at the end
+      // Make paragraphs, including one at the end.
       $chunk = '<p>' . preg_replace('/\n\s*\n\n?(.)/', "</p>\n<p>$1", $chunk) . "</p>\n";
-      // Problem with nested lists
+      // Problem with nested lists.
       $chunk = preg_replace("|<p>(<li.+?)</p>|", "$1", $chunk);
       $chunk = preg_replace('|<p><blockquote([^>]*)>|i', "<blockquote$1><p>", $chunk);
       $chunk = str_replace('</blockquote></p>', '</p></blockquote>', $chunk);
-      // Under certain strange conditions it could create a P of entirely whitespace
+      // Under certain strange conditions it could create a P of entirely
+      // whitespace.
       $chunk = preg_replace('|<p>\s*</p>\n?|', '', $chunk);
       $chunk = preg_replace('!<p>\s*(</?' . $block . '[^>]*>)!', "$1", $chunk);
       $chunk = preg_replace('!(</?' . $block . '[^>]*>)\s*</p>!', "$1", $chunk);
-      // Make line breaks
+      // Make line breaks.
       $chunk = preg_replace('|(?<!<br />)\s*\n|', "<br />\n", $chunk);
       $chunk = preg_replace('!(</?' . $block . '[^>]*>)\s*<br />!', "$1", $chunk);
       $chunk = preg_replace('!<br />(\s*</?(?:p|li|div|dl|dd|dt|th|pre|td|ul|ol)>)!', '$1', $chunk);

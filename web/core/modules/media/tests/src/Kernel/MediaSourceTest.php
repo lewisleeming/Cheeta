@@ -9,14 +9,15 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\media\Entity\Media;
 use Drupal\media\Entity\MediaType;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore sisko
-
 /**
  * Tests media source plugins related logic.
- *
- * @group media
  */
+#[Group('media')]
+#[RunTestsInSeparateProcesses]
 class MediaSourceTest extends MediaKernelTestBase {
 
   /**
@@ -122,8 +123,10 @@ class MediaSourceTest extends MediaKernelTestBase {
 
     // Change the default name attribute and see if it is used to set the name.
     $name = 'Old Major';
-    \Drupal::state()->set('media_source_test_attributes', ['alternative_name' => ['title' => 'Alternative name', 'value' => $name]]);
-    \Drupal::state()->set('media_source_test_definition', ['default_name_metadata_attribute' => 'alternative_name']);
+    \Drupal::state()
+      ->set('media_source_test_attributes', ['alternative_name' => ['title' => 'Alternative name', 'value' => $name]]);
+    \Drupal::state()
+      ->set('media_source_test_definition', ['default_name_metadata_attribute' => 'alternative_name']);
     /** @var \Drupal\media\MediaInterface $media */
     $media = Media::create(['bundle' => $this->testMediaType->id()]);
     $media_source = $media->getSource();
@@ -655,7 +658,7 @@ class MediaSourceTest extends MediaKernelTestBase {
    */
   protected function createMediaTypeViaForm($source_plugin_id, $field_name): void {
     /** @var \Drupal\media\MediaTypeInterface $type */
-    $type = MediaType::create(['source' => $source_plugin_id]);
+    $type = MediaType::create(['source' => $source_plugin_id, 'id' => 'test_media_type']);
 
     $form = $this->container->get('entity_type.manager')
       ->getFormObject('media_type', 'add')

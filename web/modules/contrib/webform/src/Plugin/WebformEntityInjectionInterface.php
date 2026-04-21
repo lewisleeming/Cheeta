@@ -33,7 +33,7 @@ interface WebformEntityInjectionInterface {
   /**
    * Set the webform submission that this handler is handling.
    *
-   * @param \Drupal\webform\WebformSubmissionInterface $webform_submission
+   * @param \Drupal\webform\WebformSubmissionInterface|null $webform_submission
    *   A webform submission.
    *
    * @return $this

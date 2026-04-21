@@ -9,12 +9,14 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests loading of text editors.
- *
- * @group editor
  */
+#[Group('editor')]
+#[RunTestsInSeparateProcesses]
 class EditorLoadingTest extends BrowserTestBase {
 
   /**
@@ -302,6 +304,9 @@ class EditorLoadingTest extends BrowserTestBase {
     $this->assertNotSame('edit-field-text-0-value', $select->getAttribute('data-editor-for'));
   }
 
+  /**
+   * Gets the information to check for the given field.
+   */
   protected function getThingsToCheck($field_name, $type = 'textarea'): array {
     $settings = $this->getDrupalSettings();
     return [

@@ -4,16 +4,27 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\package_manager\Kernel;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\package_manager\Event\PreCreateEvent;
-use Drupal\package_manager\Exception\StageEventException;
+use Drupal\package_manager\Exception\SandboxEventException;
 use Drupal\package_manager\ValidationResult;
+use Drupal\package_manager\Validator\PendingUpdatesValidator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @covers \Drupal\package_manager\Validator\PendingUpdatesValidator
- * @group package_manager
+ * Tests Pending Updates Validator.
+ *
  * @internal
  */
+#[Group('package_manager')]
+#[CoversClass(PendingUpdatesValidator::class)]
+#[RunTestsInSeparateProcesses]
 class PendingUpdatesValidatorTest extends PackageManagerKernelTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -30,9 +41,8 @@ class PendingUpdatesValidatorTest extends PackageManagerKernelTestBase {
 
   /**
    * Tests that an error is raised if there are pending schema updates.
-   *
-   * @depends testNoPendingUpdates
    */
+  #[Depends('testNoPendingUpdates')]
   public function testPendingUpdateHook(): void {
     // Set the installed schema version of Package Manager to its default value
     // and import an empty update hook which is numbered much higher than will
@@ -44,7 +54,7 @@ class PendingUpdatesValidatorTest extends PackageManagerKernelTestBase {
     require_once __DIR__ . '/../../fixtures/db_update.php';
 
     $result = ValidationResult::createError([
-      t('Some modules have database updates pending. You should run the <a href="/update.php">database update script</a> immediately.'),
+      $this->t('Some modules have database updates pending. You should run the <a href="/update.php">database update script</a> immediately.'),
     ]);
     $this->assertStatusCheckResults([$result]);
     $this->assertResults([$result], PreCreateEvent::class);
@@ -58,7 +68,7 @@ class PendingUpdatesValidatorTest extends PackageManagerKernelTestBase {
     // will think it's pending.
     require_once __DIR__ . '/../../fixtures/post_update.php';
     $result = ValidationResult::createError([
-      t('Some modules have database updates pending. You should run the <a href="/update.php">database update script</a> immediately.'),
+      $this->t('Some modules have database updates pending. You should run the <a href="/update.php">database update script</a> immediately.'),
     ]);
     $this->assertStatusCheckResults([$result]);
     $this->assertResults([$result], PreCreateEvent::class);
@@ -75,13 +85,13 @@ class PendingUpdatesValidatorTest extends PackageManagerKernelTestBase {
     // will think it's pending.
     require_once __DIR__ . '/../../fixtures/post_update.php';
     $result = ValidationResult::createError([
-      t('Some modules have database updates pending. You should run the <a href="/update.php">database update script</a> immediately.'),
+      $this->t('Some modules have database updates pending. You should run the <a href="/update.php">database update script</a> immediately.'),
     ]);
     try {
       $stage->apply();
       $this->fail('Able to apply update even though there is pending update.');
     }
-    catch (StageEventException $exception) {
+    catch (SandboxEventException $exception) {
       $this->assertExpectedResultsFromException([$result], $exception);
     }
   }

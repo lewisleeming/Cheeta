@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Core\Hook\Attribute;
 
+use Drupal\Core\Hook\Order\OrderInterface;
+
 /**
  * Attribute for defining a class method as a hook implementation.
  *
@@ -12,13 +14,13 @@ namespace Drupal\Core\Hook\Attribute;
  * - On a method, use this attribute with the hook name:
  *   @code
  *   #[Hook('user_cancel')]
- *   public method userCancel(...)
+ *   public function userCancel(...) {}
  *   @endcode
  * - On a class, specifying the method name:
  *   @code
  *   #[Hook('user_cancel', method: 'userCancel')]
  *   class Hooks {
- *     method userCancel(...) {}
+ *     public function userCancel(...) {}
  *   }
  *   @endcode
  * - On a class with an __invoke method, which is taken to be the hook
@@ -26,12 +28,18 @@ namespace Drupal\Core\Hook\Attribute;
  *   @code
  *   #[Hook('user_cancel')]
  *   class Hooks {
- *     method __invoke(...) {}
+ *     public function __invoke(...) {}
  *   }
  *   @endcode
  *
- * Ordering hook implementations can be done by implementing
- * hook_module_implements_alter.
+ * Ordering hook implementations can be done by using the order parameter.
+ * See Drupal\Core\Hook\Order\OrderInterface for more information.
+ *
+ * Removing hook implementations can be done by using the attribute
+ * \Drupal\Core\Hook\Attribute\RemoveHook.
+ *
+ * Ordering hook implementations in other modules can be done by using the
+ * attribute \Drupal\Core\Hook\Attribute\ReorderHook.
  *
  * Classes that use this annotation on the class or on their methods are
  * automatically registered as autowired services with the class name as the
@@ -70,13 +78,14 @@ namespace Drupal\Core\Hook\Attribute;
  * - hook_install_tasks()
  * - hook_install_tasks_alter()
  * - hook_post_update_NAME()
+ * - hook_removed_post_updates()
  * - hook_schema()
  * - hook_uninstall()
+ * - hook_update_dependencies()
  * - hook_update_last_removed()
  * - hook_update_N()
  *
- * Theme hooks:
- * - hook_preprocess_HOOK()
+ * Hooks implemented by themes must remain procedural.
  *
  * @section sec_backwards_compatibility Backwards-compatibility
  *
@@ -88,7 +97,7 @@ namespace Drupal\Core\Hook\Attribute;
  * See \Drupal\Core\Hook\Attribute\LegacyHook for additional information.
  */
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
-class Hook {
+class Hook implements HookAttributeInterface {
 
   /**
    * Constructs a Hook attribute object.
@@ -101,26 +110,17 @@ class Hook {
    *   parameter is omitted, the class must have an __invoke() method, which is
    *   taken as the hook implementation.
    * @param string|null $module
-   *   (optional) The module this implementation is for. This allows one module to
-   *   implement a hook on behalf of another module. Defaults to the module the
-   *   implementation is in.
+   *   (optional) The module this implementation is for. This allows one module
+   *   to implement a hook on behalf of another module. Defaults to the module
+   *   the implementation is in.
+   * @param \Drupal\Core\Hook\Order\OrderInterface|null $order
+   *   (optional) Set the order of the implementation.
    */
   public function __construct(
     public string $hook,
     public string $method = '',
     public ?string $module = NULL,
+    public ?OrderInterface $order = NULL,
   ) {}
-
-  /**
-   * Set the method the hook should apply to.
-   *
-   * @param string $method
-   *   The method that the hook attribute applies to.
-   *   This only needs to be set when the attribute is on the class.
-   */
-  public function setMethod(string $method): static {
-    $this->method = $method;
-    return $this;
-  }
 
 }

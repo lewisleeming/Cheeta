@@ -18,6 +18,8 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides the add-page and title callbacks for entities.
@@ -35,69 +37,19 @@ class EntityController implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The entity type bundle info.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityTypeBundleInfo;
-
-  /**
-   * The entity repository.
-   *
-   * @var \Drupal\Core\Entity\EntityRepositoryInterface
-   */
-  protected $entityRepository;
-
-  /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The URL generator.
-   */
-  protected UrlGeneratorInterface $urlGenerator;
-
-  /**
-   * The route match.
-   */
-  protected RouteMatchInterface $routeMatch;
-
-  /**
    * Constructs a new EntityController.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info.
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
-   *   The entity repository.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
-   *   The string translation.
-   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
-   *   The URL generator.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *   The route match.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityRepositoryInterface $entity_repository, RendererInterface $renderer, TranslationInterface $string_translation, UrlGeneratorInterface $url_generator, RouteMatchInterface $route_match) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-    $this->entityRepository = $entity_repository;
-    $this->renderer = $renderer;
-    $this->stringTranslation = $string_translation;
-    $this->urlGenerator = $url_generator;
-    $this->routeMatch = $route_match;
+  public function __construct(
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
+    protected readonly EntityTypeBundleInfoInterface $entityTypeBundleInfo,
+    protected readonly EntityRepositoryInterface $entityRepository,
+    protected readonly RendererInterface $renderer,
+    TranslationInterface $stringTranslation,
+    protected readonly UrlGeneratorInterface $urlGenerator,
+    protected readonly RouteMatchInterface $routeMatch,
+    protected readonly RequestStack $requestStack,
+  ) {
+    $this->stringTranslation = $stringTranslation;
   }
 
   /**
@@ -111,7 +63,8 @@ class EntityController implements ContainerInjectionInterface {
       $container->get('renderer'),
       $container->get('string_translation'),
       $container->get('url_generator'),
-      $container->get('current_route_match')
+      $container->get('current_route_match'),
+      $container->get('request_stack'),
     );
   }
 
@@ -143,12 +96,18 @@ class EntityController implements ContainerInjectionInterface {
    *
    * @param string $entity_type_id
    *   The entity type ID.
+   * @param \Symfony\Component\HttpFoundation\Request|null $request
+   *   The current request object.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
    *   If there's only one available bundle, a redirect response.
    *   Otherwise, a render array with the add links for each bundle.
    */
-  public function addPage($entity_type_id) {
+  public function addPage($entity_type_id, ?Request $request = NULL) {
+    if ($request === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $request parameter is deprecated in drupal:11.3.0 and it will be required in drupal:12.0.0. See https://www.drupal.org/node/3467748', E_USER_DEPRECATED);
+      $request = $this->requestStack->getCurrentRequest();
+    }
     $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
     $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
     $bundle_key = $entity_type->getKey('bundle');
@@ -193,7 +152,8 @@ class EntityController implements ContainerInjectionInterface {
       $bundle_name = reset($bundle_names);
       $parameters = $this->routeMatch->getRawParameters()->all();
       $parameters[$bundle_argument] = $bundle_name;
-      return $this->redirect($form_route_name, $parameters);
+      $query = $request->query->all();
+      return $this->redirect($form_route_name, $parameters, ['query' => $query]);
     }
     // Prepare the #bundles array for the template.
     foreach ($bundles as $bundle_name => $bundle_info) {
@@ -279,9 +239,15 @@ class EntityController implements ContainerInjectionInterface {
    *   The title for the entity edit page, if an entity was found.
    */
   public function editTitle(RouteMatchInterface $route_match, ?EntityInterface $_entity = NULL) {
-    if ($entity = $this->doGetEntity($route_match, $_entity)) {
-      return $this->t('Edit %label', ['%label' => $entity->label()]);
+    $entity = $this->doGetEntity($route_match, $_entity);
+    if ($entity === NULL) {
+      return NULL;
     }
+    $label = $entity->label();
+    if ($label === NULL) {
+      return $this->t('Edit');
+    }
+    return $this->t('Edit %label', ['%label' => $label]);
   }
 
   /**
@@ -297,9 +263,15 @@ class EntityController implements ContainerInjectionInterface {
    *   The title for the entity delete page.
    */
   public function deleteTitle(RouteMatchInterface $route_match, ?EntityInterface $_entity = NULL) {
-    if ($entity = $this->doGetEntity($route_match, $_entity)) {
-      return $this->t('Delete %label', ['%label' => $entity->label()]);
+    $entity = $this->doGetEntity($route_match, $_entity);
+    if ($entity === NULL) {
+      return '';
     }
+    $label = $entity->label();
+    if ($label === NULL) {
+      return $this->t('Delete');
+    }
+    return $this->t('Delete %label', ['%label' => $label]);
   }
 
   /**
@@ -336,13 +308,16 @@ class EntityController implements ContainerInjectionInterface {
   /**
    * Expands the bundle information with descriptions, if known.
    *
+   * Also sorts the bundles before adding the bundle descriptions. Sorting is
+   * being done here to avoid having to load bundle entities multiple times.
+   *
    * @param array $bundles
    *   An array of bundle information.
    * @param \Drupal\Core\Entity\EntityTypeInterface $bundle_entity_type
    *   The bundle entity type definition.
    *
    * @return array
-   *   The expanded array of bundle information.
+   *   An array of sorted bundle information including bundle descriptions.
    */
   protected function loadBundleDescriptions(array $bundles, EntityTypeInterface $bundle_entity_type) {
     if (!$bundle_entity_type->entityClassImplements(EntityDescriptionInterface::class)) {
@@ -352,6 +327,10 @@ class EntityController implements ContainerInjectionInterface {
     $storage = $this->entityTypeManager->getStorage($bundle_entity_type->id());
     /** @var \Drupal\Core\Entity\EntityDescriptionInterface[] $bundle_entities */
     $bundle_entities = $storage->loadMultiple($bundle_names);
+
+    uasort($bundle_entities, [$bundle_entity_type->getClass(), 'sort']);
+    $bundles = array_replace($bundle_entities, $bundles);
+
     foreach ($bundles as $bundle_name => &$bundle_info) {
       if (isset($bundle_entities[$bundle_name])) {
         $bundle_info['description'] = $bundle_entities[$bundle_name]->getDescription();

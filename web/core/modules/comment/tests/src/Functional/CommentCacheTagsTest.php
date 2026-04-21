@@ -11,18 +11,20 @@ use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\entity_test\Entity\EntityTest;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\system\Functional\Entity\EntityWithUriCacheTagsTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore amphibius Hippopotamidae
-
 /**
  * Tests the Comment entity's cache tags.
- *
- * @group comment
  */
+#[Group('comment')]
+#[RunTestsInSeparateProcesses]
 class CommentCacheTagsTest extends EntityWithUriCacheTagsTestBase {
 
   use CommentTestTrait;
@@ -66,7 +68,7 @@ class CommentCacheTagsTest extends EntityWithUriCacheTagsTestBase {
   protected function createEntity() {
     // Create a "bar" bundle for the "entity_test" entity type and create.
     $bundle = 'bar';
-    entity_test_create_bundle($bundle, NULL, 'entity_test');
+    EntityTestHelper::createBundle($bundle, NULL, 'entity_test');
 
     // Create a comment field on this bundle.
     $this->addDefaultCommentField('entity_test', 'bar', 'comment');

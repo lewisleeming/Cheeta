@@ -7,12 +7,15 @@ namespace Drupal\Tests\Component\Utility;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 
 // cspell:ignore ascript barbaz ckers cript CVEs dynsrc fooÿñ msgbox ncript
 // cspell:ignore nfocus nmedi nosuchscheme nosuchtag onmediaerror scrscriptipt
 // cspell:ignore tascript vbscript
-
 /**
  * XSS Filtering tests.
  *
@@ -21,11 +24,10 @@ use PHPUnit\Framework\TestCase;
  * Relevant CVEs:
  * - CVE-2002-1806, ~CVE-2005-0682, ~CVE-2005-2106, CVE-2005-3973,
  *   CVE-2006-1226 (= rev. 1.112?), CVE-2008-0273, CVE-2008-3740.
- *
- * @group Utility
- * @coversDefaultClass \Drupal\Component\Utility\Xss
- * @runTestsInSeparateProcesses
  */
+#[CoversClass(Xss::class)]
+#[Group('Utility')]
+#[RunTestsInSeparateProcesses]
 class XssTest extends TestCase {
 
   /**
@@ -64,10 +66,10 @@ class XssTest extends TestCase {
    * @param string $message
    *   The assertion message to display upon failure.
    * @param array $allowed_tags
-   *   (optional) The allowed HTML tags to be passed to \Drupal\Component\Utility\Xss::filter().
-   *
-   * @dataProvider providerTestFilterXssNormalized
+   *   (optional) The allowed HTML tags to be passed to
+   *   \Drupal\Component\Utility\Xss::filter().
    */
+  #[DataProvider('providerTestFilterXssNormalized')]
   public function testFilterXssNormalized($value, $expected, $message, ?array $allowed_tags = NULL): void {
     if ($allowed_tags === NULL) {
       $value = Xss::filter($value);
@@ -91,7 +93,7 @@ class XssTest extends TestCase {
    *     - (optional) The allowed HTML tags array that should be passed to
    *       \Drupal\Component\Utility\Xss::filter().
    */
-  public static function providerTestFilterXssNormalized() {
+  public static function providerTestFilterXssNormalized(): array {
     return [
       [
         "Who&#039;s Online",
@@ -131,10 +133,10 @@ class XssTest extends TestCase {
    * @param string $message
    *   The assertion message to display upon failure.
    * @param array $allowed_tags
-   *   (optional) The allowed HTML tags to be passed to \Drupal\Component\Utility\Xss::filter().
-   *
-   * @dataProvider providerTestFilterXssNotNormalized
+   *   (optional) The allowed HTML tags to be passed to
+   *   \Drupal\Component\Utility\Xss::filter().
    */
+  #[DataProvider('providerTestFilterXssNotNormalized')]
   public function testFilterXssNotNormalized($value, $expected, $message, ?array $allowed_tags = NULL): void {
     if ($allowed_tags === NULL) {
       $value = Xss::filter($value);
@@ -158,7 +160,7 @@ class XssTest extends TestCase {
    *     - (optional) The allowed HTML tags array that should be passed to
    *       \Drupal\Component\Utility\Xss::filter().
    */
-  public static function providerTestFilterXssNotNormalized() {
+  public static function providerTestFilterXssNotNormalized(): array {
     $cases = [
       // Tag stripping, different ways to work around removal of HTML tags.
       [
@@ -212,8 +214,8 @@ class XssTest extends TestCase {
         'script',
         'HTML tag stripping evasion -- no closing tag.',
       ],
-      // DRUPAL-SA-2008-047: This doesn't seem exploitable, but the filter should
-      // work consistently.
+      // DRUPAL-SA-2008-047: This doesn't seem exploitable, but the filter
+      // should work consistently.
       [
         '<script>>',
         'script',
@@ -424,13 +426,19 @@ class XssTest extends TestCase {
         'Netscape 4.x javascript entities.',
         ['br'],
       ],
-      // DRUPAL-SA-2008-006: Invalid UTF-8, these only work as reflected XSS with
-      // Internet Explorer 6.
+      // DRUPAL-SA-2008-006: Invalid UTF-8, these only work as reflected XSS
+      // with Internet Explorer 6.
       [
         "<p arg=\"\xe0\">\" style=\"background-image: url(javascript:alert(0));\"\xe0<p>",
         'style',
         'HTML filter -- invalid UTF-8.',
         ['p'],
+      ],
+      [
+        '<iframe srcdoc="&lt;script&gt;alert(document.cookie)&lt;/script&gt;"></iframe>',
+        'srcdoc',
+        'HTML filter attributes removal -- srcdoc attribute.',
+        ['iframe'],
       ],
     ];
     return $cases;
@@ -445,9 +453,8 @@ class XssTest extends TestCase {
    *   The expected result.
    * @param string $message
    *   The assertion message to display upon failure.
-   *
-   * @dataProvider providerTestInvalidMultiByte
    */
+  #[DataProvider('providerTestInvalidMultiByte')]
   public function testInvalidMultiByte($value, $expected, $message): void {
     $this->assertEquals(Xss::filter($value), $expected, $message);
   }
@@ -463,7 +470,7 @@ class XssTest extends TestCase {
    *     - The value to expect after filtering.
    *     - The assertion message.
    */
-  public static function providerTestInvalidMultiByte() {
+  public static function providerTestInvalidMultiByte(): array {
     return [
       ["Foo\xC0barbaz", '', 'Xss::filter() accepted invalid sequence "Foo\xC0barbaz"'],
       ["Fooÿñ", "Fooÿñ", 'Xss::filter() rejects valid sequence Fooÿñ"'],
@@ -482,9 +489,9 @@ class XssTest extends TestCase {
   /**
    * Check that strings in HTML attributes are correctly processed.
    *
-   * @covers ::attributes
-   * @dataProvider providerTestAttributes
+   * @legacy-covers ::attributes
    */
+  #[DataProvider('providerTestAttributes')]
   public function testAttribute($value, $expected, $message, $allowed_tags = NULL): void {
     $value = Xss::filter($value, $allowed_tags);
     $this->assertEquals($expected, $value, $message);
@@ -493,7 +500,7 @@ class XssTest extends TestCase {
   /**
    * Data provider for testFilterXssAdminNotNormalized().
    */
-  public static function providerTestAttributes() {
+  public static function providerTestAttributes(): array {
     return [
       [
         '<img src="http://example.com/foo.jpg" title="Example: title" alt="Example: alt" class="md:block">',
@@ -581,9 +588,8 @@ class XssTest extends TestCase {
    *   The expected result.
    * @param string $message
    *   The assertion message to display upon failure.
-   *
-   * @dataProvider providerTestFilterXssAdminNotNormalized
    */
+  #[DataProvider('providerTestFilterXssAdminNotNormalized')]
   public function testFilterXssAdminNotNormalized($value, $expected, $message): void {
     $this->assertNotNormalized(Xss::filterAdmin($value), $expected, $message);
   }
@@ -599,9 +605,9 @@ class XssTest extends TestCase {
    *     - The value to expect after filtering.
    *     - The assertion message.
    */
-  public static function providerTestFilterXssAdminNotNormalized() {
+  public static function providerTestFilterXssAdminNotNormalized(): array {
     return [
-      // DRUPAL-SA-2008-044
+      // DRUPAL-SA-2008-044.
       ['<object />', 'object', 'Admin HTML filter -- should not allow object tag.'],
       ['<script />', 'script', 'Admin HTML filter -- should not allow script tag.'],
     ];

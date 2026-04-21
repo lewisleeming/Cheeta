@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\layout_builder\Functional;
 
-use Drupal\Tests\content_translation\Functional\ContentTranslationTestBase;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Url;
+use Drupal\Tests\content_translation\Functional\ContentTranslationTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that the Layout Builder works with translated content.
- *
- * @group layout_builder
  */
+#[Group('layout_builder')]
+#[RunTestsInSeparateProcesses]
 class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
 
   /**
@@ -153,7 +155,6 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
     ], $this->langcodes[0]);
     $storage = $this->container->get('entity_type.manager')
       ->getStorage($this->entityTypeId);
-    $storage->resetCache([$id]);
     $this->entity = $storage->load($id);
   }
 

@@ -4,9 +4,6 @@
  */
 
 (function ($, Drupal, once, tabbable) {
-
-  'use strict';
-
   // @see http://codemirror.net/doc/manual.html#config
   Drupal.webform = Drupal.webform || {};
   Drupal.webform.codeMirror = Drupal.webform.codeMirror || {};
@@ -18,7 +15,7 @@
    * @type {Drupal~behavior}
    */
   Drupal.behaviors.webformCodeMirror = {
-    attach: function (context) {
+    attach(context) {
       if (!window.CodeMirror) {
         return;
       }

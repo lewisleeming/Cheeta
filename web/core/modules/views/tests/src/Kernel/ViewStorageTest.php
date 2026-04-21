@@ -8,14 +8,17 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\views\Entity\View;
 use Drupal\views\Plugin\views\display\Page;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the CRUD functionality for a view.
  *
- * @group views
  * @see \Drupal\views\Entity\View
  * @see \Drupal\Core\Config\Entity\ConfigEntityStorage
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class ViewStorageTest extends ViewsKernelTestBase {
 
   /**
@@ -71,7 +74,7 @@ class ViewStorageTest extends ViewsKernelTestBase {
     $this->createTests();
     $this->displayTests();
 
-    // Helper method tests
+    // Helper method tests.
     $this->displayMethodTests();
   }
 
@@ -311,8 +314,8 @@ class ViewStorageTest extends ViewsKernelTestBase {
     // Check that the original view and the copy have different UUIDs.
     $this->assertNotSame($view->storage->uuid(), $copy->uuid(), 'The copied view has a new UUID.');
 
-    // Check the 'name' (ID) is using the View objects default value (NULL) as it
-    // gets unset.
+    // Check the 'name' (ID) is using the View objects default value (NULL) as
+    // it gets unset.
     $this->assertNull($copy->id(), 'The ID has been reset.');
 
     // Check the other properties.

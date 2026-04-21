@@ -241,4 +241,25 @@ class ExecutionContext implements ExecutionContextInterface {
     throw new \LogicException(ExecutionContextInterface::class . '::isObjectInitialized is unsupported.');
   }
 
+  /**
+   * Clone this context.
+   */
+  public function __clone(): void {
+    $this->violations = clone $this->violations;
+  }
+
+  /**
+   * Gets the current constraint.
+   *
+   * @return \Symfony\Component\Validator\Constraint|null
+   *   The constraint.
+   *
+   * @internal
+   *   This method is not part of the public API. It is only used to make
+   *   recursive calls work.
+   */
+  public function getConstraint(): ?Constraint {
+    return $this->constraint ?? NULL;
+  }
+
 }

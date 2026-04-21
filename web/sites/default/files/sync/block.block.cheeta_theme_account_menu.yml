@@ -1,6 +1,6 @@
 uuid: 94bd4016-88cf-473f-8ae2-8a99432efd08
 langcode: en
-status: true
+status: false
 dependencies:
   config:
     - system.menu.account
@@ -12,7 +12,7 @@ _core:
   default_config_hash: gmxYWWHmgbe0Pnv8y48ZLSLH5mEHejOjAP6RLxUfdzU
 id: cheeta_theme_account_menu
 theme: cheeta_theme
-region: secondary_menu
+region: ''
 weight: -4
 provider: null
 plugin: 'system_menu_block:account'

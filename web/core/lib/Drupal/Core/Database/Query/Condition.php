@@ -62,7 +62,7 @@ class Condition implements ConditionInterface, \Countable {
   protected $changed = TRUE;
 
   /**
-   * The identifier of the query placeholder this condition has been compiled against.
+   * The query placeholder identifier this condition has been compiled against.
    *
    * @var string
    */
@@ -222,16 +222,16 @@ class Condition implements ConditionInterface, \Countable {
           }
           $arguments += $condition['field']->arguments();
           // If the operator and value were not passed in to the
-          // @see ConditionInterface::condition() method (and thus have the
-          // default value as defined over there) it is assumed to be a valid
-          // condition on its own: ignore the operator and value parts.
+          // ConditionInterface::condition() method (and thus have the default
+          // value as defined over there) it is assumed to be a valid condition
+          // on its own: ignore the operator and value parts.
           $ignore_operator = $condition['operator'] === '=' && $condition['value'] === NULL;
         }
         elseif (!isset($condition['operator'])) {
           // Left hand part is a literal string added with the
-          // @see ConditionInterface::where() method. Put brackets around
-          // the snippet and collect the arguments from the value part.
-          // Also ignore the operator and value parts.
+          // ConditionInterface::where() method. Put brackets around the snippet
+          // and collect the arguments from the value part. Also ignore the
+          // operator and value parts.
           $field_fragment = '(' . $condition['field'] . ')';
           $arguments += $condition['value'];
           $ignore_operator = TRUE;
@@ -351,8 +351,9 @@ class Condition implements ConditionInterface, \Countable {
   /**
    * PHP magic __clone() method.
    *
-   * Only copies fields that implement Drupal\Core\Database\Query\ConditionInterface. Also sets
-   * $this->changed to TRUE.
+   * Only copies fields that implement
+   * Drupal\Core\Database\Query\ConditionInterface. Also sets $this->changed to
+   * TRUE.
    */
   public function __clone() {
     $this->changed = TRUE;

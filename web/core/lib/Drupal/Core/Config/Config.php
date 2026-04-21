@@ -209,6 +209,8 @@ class Config extends StorableConfigBase {
         // Ensure that the schema wrapper has the latest data.
         $this->schemaWrapper = NULL;
         $this->data = $this->castValue(NULL, $this->data);
+        // Reclaim the memory used by the schema wrapper.
+        $this->schemaWrapper = NULL;
       }
       else {
         foreach ($this->data as $key => $value) {
@@ -257,8 +259,6 @@ class Config extends StorableConfigBase {
    * configuration storage before any changes. If this is a new configuration
    * object it will be an empty array.
    *
-   * @see \Drupal\Core\Config\Config::get()
-   *
    * @param string $key
    *   A string that maps to a key within the configuration data.
    * @param bool $apply_overrides
@@ -266,6 +266,8 @@ class Config extends StorableConfigBase {
    *
    * @return mixed
    *   The data that was requested.
+   *
+   * @see \Drupal\Core\Config\Config::get()
    */
   public function getOriginal($key = '', $apply_overrides = TRUE) {
     $original_data = $this->originalData;

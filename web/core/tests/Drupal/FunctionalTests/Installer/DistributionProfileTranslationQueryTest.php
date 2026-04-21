@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Serialization\Yaml;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests distribution profile support with a 'langcode' query string.
  *
- * @group Installer
- *
  * @see \Drupal\FunctionalTests\Installer\DistributionProfileTranslationTest
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class DistributionProfileTranslationQueryTest extends InstallerTestBase {
 
   /**
@@ -67,7 +69,7 @@ class DistributionProfileTranslationQueryTest extends InstallerTestBase {
     // profile. This distribution language should still be used.
     // The unrouted URL assembler does not exist at this point, so we build the
     // URL ourselves.
-    $this->drupalGet($GLOBALS['base_url'] . '/core/install.php' . '?langcode=fr');
+    $this->drupalGet($GLOBALS['base_url'] . '/core/install.php?langcode=fr');
   }
 
   /**
@@ -120,7 +122,8 @@ class DistributionProfileTranslationQueryTest extends InstallerTestBase {
 
     // Verify German was configured but not English.
     $this->drupalGet('admin/config/regional/language');
-    $this->assertSession()->pageTextContains('German');
+    // cspell:ignore deutsch
+    $this->assertSession()->pageTextContains('Deutsch');
     $this->assertSession()->pageTextNotContains('English');
   }
 

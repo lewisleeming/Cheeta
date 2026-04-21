@@ -112,7 +112,7 @@ class UpdateHookRegistry {
       // possible functions which match '_update_'. We use preg_grep() here
       // since looping through all PHP functions can take significant page
       // execution time and this function is called on every administrative page
-      // via system_requirements().
+      // via the system runtime_requirements hook.
       foreach (preg_grep('/_\d+$/', $functions['user']) as $function) {
         // If this function is a module update function, add it to the list of
         // module updates.
@@ -139,8 +139,8 @@ class UpdateHookRegistry {
    *   A module name.
    *
    * @return int
-   *   The currently installed schema version, or self::SCHEMA_UNINSTALLED if the
-   *   module is not installed.
+   *   The currently installed schema version, or self::SCHEMA_UNINSTALLED if
+   *   the module is not installed.
    */
   public function getInstalledVersion(string $module): int {
     return $this->keyValue->get($module, self::SCHEMA_UNINSTALLED);
@@ -178,8 +178,8 @@ class UpdateHookRegistry {
    * Returns the currently installed schema version for all modules.
    *
    * @return int[]
-   *   Array of modules as the keys and values as the currently installed
-   *   schema version of corresponding module, or self::SCHEMA_UNINSTALLED if the
+   *   Array of modules as the keys and values as the currently installed schema
+   *   version of corresponding module, or self::SCHEMA_UNINSTALLED if the
    *   module is not installed.
    */
   public function getAllInstalledVersions(): array {

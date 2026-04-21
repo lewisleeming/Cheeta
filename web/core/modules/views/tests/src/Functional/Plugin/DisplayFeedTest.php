@@ -8,13 +8,16 @@ use Drupal\Core\Url;
 use Drupal\Tests\Traits\Core\PathAliasTestTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the feed display plugin.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\display\Feed
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class DisplayFeedTest extends ViewTestBase {
 
   use PathAliasTestTrait;
@@ -78,13 +81,8 @@ class DisplayFeedTest extends ViewTestBase {
     $this->assertEquals('Copyright 2019 Dries Buytaert', $this->getSession()->getDriver()->getText('//channel/copyright'));
     $this->assertEquals($node_title, $this->getSession()->getDriver()->getText('//item/title'));
     $this->assertEquals($node_link, $this->getSession()->getDriver()->getText('//item/link'));
-    // HTML should no longer be escaped since it is CDATA. Confirm it is
-    // wrapped in CDATA.
-    $this->assertSession()->responseContains('<description><![CDATA[');
-    // Confirm that the view is still displaying the content.
-    $this->assertSession()->responseContains('<p>A paragraph</p>');
-    // Confirm that the CDATA is closed properly.
-    $this->assertSession()->responseContains(']]></description>');
+    // Verify HTML is properly escaped in the description field.
+    $this->assertSession()->responseContains('&lt;p&gt;A paragraph&lt;/p&gt;');
 
     $view = $this->container->get('entity_type.manager')->getStorage('view')->load('test_display_feed');
     $display = &$view->getDisplay('feed_1');
@@ -144,13 +142,8 @@ class DisplayFeedTest extends ViewTestBase {
     $this->drupalGet('test-feed-display-fields.xml');
     $this->assertEquals($node_title, $this->getSession()->getDriver()->getText('//item/title'));
     $this->assertEquals($node_link, $this->getSession()->getDriver()->getText('//item/link'));
-    // HTML should no longer be escaped since it is CDATA. Confirm it is wrapped
-    // in CDATA.
-    $this->assertSession()->responseContains('<description><![CDATA[');
-    // Confirm that the view is still displaying the content.
-    $this->assertSession()->responseContains('<p>A paragraph</p>');
-    // Confirm that the CDATA is closed properly.
-    $this->assertSession()->responseContains(']]></description>');
+    // Verify HTML is properly escaped in the description field.
+    $this->assertSession()->responseContains('&lt;p&gt;A paragraph&lt;/p&gt;');
 
     // Change the display to use the nid field, which is rewriting output as
     // 'node/{{ nid }}' and make sure things are still working.

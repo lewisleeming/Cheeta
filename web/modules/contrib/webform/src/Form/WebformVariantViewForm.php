@@ -41,7 +41,7 @@ class WebformVariantViewForm extends FormBase {
    *   An associative array containing the structure of the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
-   * @param \Drupal\webform\WebformInterface $webform
+   * @param \Drupal\webform\WebformInterface|null $webform
    *   The webform.
    * @param string $operation
    *   The webform operation.

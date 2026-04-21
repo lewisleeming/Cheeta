@@ -2,40 +2,54 @@
 
 namespace Drupal\ckeditor5\Hook;
 
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\ckeditor5\LanguageMapper;
+use Drupal\Core\Hook\Order\OrderAfter;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Render\Element;
+use Drupal\ckeditor5\HTMLRestrictions;
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\editor\EditorInterface;
 
 /**
  * Hook implementations for ckeditor5.
  */
 class Ckeditor5Hooks {
 
+  use StringTranslationTrait;
+
+  public function __construct(
+    protected LanguageMapper $languageMapper,
+  ) {
+
+  }
+
   /**
    * Implements hook_help().
    */
   #[Hook('help')]
-  public function help($route_name, RouteMatchInterface $route_match) {
+  public function help($route_name, RouteMatchInterface $route_match): ?string {
     switch ($route_name) {
       case 'help.page.ckeditor5':
         $output = '';
-        $output .= '<h2>' . t('About') . '</h2>';
-        $output .= '<p>' . t('The CKEditor 5 module provides a highly-accessible, highly-usable visual text editor and adds a toolbar to text fields. Users can use buttons to format content and to create semantically correct and valid HTML. The CKEditor module uses the framework provided by the <a href=":text_editor">Text Editor module</a>. It requires JavaScript to be enabled in the browser. For more information, see the <a href=":doc_url">online documentation for the CKEditor 5 module</a> and the <a href=":cke5_url">CKEditor 5 website</a>.', [
+        $output .= '<h2>' . $this->t('About') . '</h2>';
+        $output .= '<p>' . $this->t('The CKEditor 5 module provides a highly-accessible, highly-usable visual text editor and adds a toolbar to text fields. Users can use buttons to format content and to create semantically correct and valid HTML. The CKEditor module uses the framework provided by the <a href=":text_editor">Text Editor module</a>. It requires JavaScript to be enabled in the browser. For more information, see the <a href=":doc_url">online documentation for the CKEditor 5 module</a> and the <a href=":cke5_url">CKEditor 5 website</a>.', [
           ':doc_url' => 'https://www.drupal.org/docs/contributed-modules/ckeditor-5',
           ':cke5_url' => 'https://ckeditor.com/ckeditor-5/',
           ':text_editor' => Url::fromRoute('help.page', [
             'name' => 'editor',
           ])->toString(),
         ]) . '</p>';
-        $output .= '<h2>' . t('Uses') . '</h2>';
+        $output .= '<h2>' . $this->t('Uses') . '</h2>';
         $output .= '<dl>';
-        $output .= '<dt>' . t('Enabling CKEditor 5 for individual text formats') . '</dt>';
-        $output .= '<dd>' . t('CKEditor 5 has to be installed and configured separately for individual text formats from the <a href=":formats">Text formats and editors page</a> because the filter settings for each text format can be different. For more information, see the <a href=":text_editor">Text Editor help page</a> and <a href=":filter">Filter help page</a>.', [
+        $output .= '<dt>' . $this->t('Enabling CKEditor 5 for individual text formats') . '</dt>';
+        $output .= '<dd>' . $this->t('CKEditor 5 has to be installed and configured separately for individual text formats from the <a href=":formats">Text formats and editors page</a> because the filter settings for each text format can be different. For more information, see the <a href=":text_editor">Text Editor help page</a> and <a href=":filter">Filter help page</a>.', [
           ':formats' => Url::fromRoute('filter.admin_overview')->toString(),
           ':text_editor' => Url::fromRoute('help.page', [
             'name' => 'editor',
@@ -44,46 +58,47 @@ class Ckeditor5Hooks {
             'name' => 'filter',
           ])->toString(),
         ]) . '</dd>';
-        $output .= '<dt>' . t('Configuring the toolbar') . '</dt>';
-        $output .= '<dd>' . t('When CKEditor 5 is chosen from the <em>Text editor</em> drop-down menu, its toolbar configuration is displayed. You can add and remove buttons from the <em>Active toolbar</em> by dragging and dropping them. Separators and rows can be added to organize the buttons.') . '</dd>';
-        $output .= '<dt>' . t('Filtering HTML content') . '</dt>';
-        $output .= '<dd>' . t("Unlike other text editors, plugin configuration determines the tags and attributes allowed in text formats using CKEditor 5. If using the <em>Limit allowed HTML tags and correct faulty HTML</em> filter, this filter's values will be automatically set based on enabled plugins and toolbar items.");
-        $output .= '<dt>' . t('Toggling between formatted text and HTML source') . '</dt>';
-        $output .= '<dd>' . t('If the <em>Source</em> button is available in the toolbar, users can click this button to disable the visual editor and edit the HTML source directly. After toggling back, the visual editor uses the HTML tags allowed via plugin configuration (and not explicity disallowed by filters) to format the text. Tags not enabled via plugin configuration will be stripped out of the HTML source when the user toggles back to the text editor.') . '</dd>';
-        $output .= '<dt>' . t('Developing CKEditor 5 plugins in Drupal') . '</dt>';
-        $output .= '<dd>' . t('See the <a href=":dev_docs_url">online documentation</a> for detailed information on developing CKEditor 5 plugins for use in Drupal.', [
+        $output .= '<dt>' . $this->t('Configuring the toolbar') . '</dt>';
+        $output .= '<dd>' . $this->t('When CKEditor 5 is chosen from the <em>Text editor</em> drop-down menu, its toolbar configuration is displayed. You can add and remove buttons from the <em>Active toolbar</em> by dragging and dropping them. Separators and rows can be added to organize the buttons.') . '</dd>';
+        $output .= '<dt>' . $this->t('Filtering HTML content') . '</dt>';
+        $output .= '<dd>' . $this->t("Unlike other text editors, plugin configuration determines the tags and attributes allowed in text formats using CKEditor 5. If using the <em>Limit allowed HTML tags and correct faulty HTML</em> filter, this filter's values will be automatically set based on enabled plugins and toolbar items.");
+        $output .= '<dt>' . $this->t('Toggling between formatted text and HTML source') . '</dt>';
+        $output .= '<dd>' . $this->t('If the <em>Source</em> button is available in the toolbar, users can click this button to disable the visual editor and edit the HTML source directly. After toggling back, the visual editor uses the HTML tags allowed via plugin configuration (and not explicity disallowed by filters) to format the text. Tags not enabled via plugin configuration will be stripped out of the HTML source when the user toggles back to the text editor.') . '</dd>';
+        $output .= '<dt>' . $this->t('Developing CKEditor 5 plugins in Drupal') . '</dt>';
+        $output .= '<dd>' . $this->t('See the <a href=":dev_docs_url">online documentation</a> for detailed information on developing CKEditor 5 plugins for use in Drupal.', [
           ':dev_docs_url' => 'https://www.drupal.org/docs/contributed-modules/ckeditor-5/plugin-and-contrib-module-development',
         ]) . '</dd>';
         $output .= '</dd>';
-        $output .= '<dt>' . t('Accessibility features') . '</dt>';
-        $output .= '<dd>' . t('The built in WYSIWYG editor (CKEditor 5) comes with a number of accessibility features. CKEditor 5 comes with built in <a href=":shortcuts">keyboard shortcuts</a>, which can be beneficial for both power users and keyboard only users.', [
+        $output .= '<dt>' . $this->t('Accessibility features') . '</dt>';
+        $output .= '<dd>' . $this->t('The built in WYSIWYG editor (CKEditor 5) comes with a number of accessibility features. CKEditor 5 comes with built in <a href=":shortcuts">keyboard shortcuts</a>, which can be beneficial for both power users and keyboard only users.', [
           ':shortcuts' => 'https://ckeditor.com/docs/ckeditor5/latest/features/keyboard-support.html',
         ]) . '</dd>';
-        $output .= '<dt>' . t('Generating accessible content') . '</dt>';
+        $output .= '<dt>' . $this->t('Generating accessible content') . '</dt>';
         $output .= '<dd>';
         $output .= '<ul>';
-        $output .= '<li>' . t('HTML tables can be created with table headers and caption/summary elements.') . '</li>';
-        $output .= '<li>' . t('Alt text is required by default on images added through CKEditor (note that this can be overridden).') . '</li>';
-        $output .= '<li>' . t('Semantic HTML5 figure/figcaption are available to add captions to images.') . '</li>';
-        $output .= '<li>' . t('To support multilingual page content, CKEditor 5 can be configured to include a language button in the toolbar.') . '</li>';
+        $output .= '<li>' . $this->t('HTML tables can be created with table headers and caption/summary elements.') . '</li>';
+        $output .= '<li>' . $this->t('Alt text is required by default on images added through CKEditor (note that this can be overridden).') . '</li>';
+        $output .= '<li>' . $this->t('Semantic HTML5 figure/figcaption are available to add captions to images.') . '</li>';
+        $output .= '<li>' . $this->t('To support multilingual page content, CKEditor 5 can be configured to include a language button in the toolbar.') . '</li>';
         $output .= '</ul>';
         $output .= '</dd>';
         $output .= '</dl>';
-        $output .= '<h3 id="migration-settings">' . t('Migrating an Existing Text Format to CKEditor 5') . '</h2>';
-        $output .= '<p>' . t('When switching an existing text format to use CKEditor 5, an automatic process is initiated that helps text formats switching to CKEditor 5 from CKEditor 4 (or no text editor) to do so with minimal effort and zero data loss.') . '</p>';
-        $output .= '<p>' . t("This process is designed for there to be no data loss risk in switching to CKEditor 5. However some of your editor's functionality may not be 100% equivalent to what was available previously. In most cases, these changes are minimal. After the process completes, status and/or warning messages will summarize any changes that occurred, and more detailed information will be available in the site's logs.") . '</p>';
-        $output .= '<p>' . t('CKEditor 5 will attempt to enable plugins that provide equivalent toolbar items to those used prior to switching to CKEditor 5. All core CKEditor 4 plugins and many popular contrib plugins already have CKEditor 5 equivalents. In some cases, functionality that required contrib modules is now built into CKEditor 5. In instances where a plugin does not have an equivalent, no data loss will occur but elements previously provided via the plugin may need to be added manually as HTML via source editing.') . '</p>';
-        $output .= '<h4>' . t('Additional migration considerations for text formats with restricted HTML') . '</h4>';
+        $output .= '<h3 id="migration-settings">' . $this->t('Migrating an Existing Text Format to CKEditor 5') . '</h2>';
+        $output .= '<p>' . $this->t('When switching an existing text format to use CKEditor 5, an automatic process is initiated that helps text formats switching to CKEditor 5 from CKEditor 4 (or no text editor) to do so with minimal effort and zero data loss.') . '</p>';
+        $output .= '<p>' . $this->t("This process is designed for there to be no data loss risk in switching to CKEditor 5. However some of your editor's functionality may not be 100% equivalent to what was available previously. In most cases, these changes are minimal. After the process completes, status and/or warning messages will summarize any changes that occurred, and more detailed information will be available in the site's logs.") . '</p>';
+        $output .= '<p>' . $this->t('CKEditor 5 will attempt to enable plugins that provide equivalent toolbar items to those used prior to switching to CKEditor 5. All core CKEditor 4 plugins and many popular contrib plugins already have CKEditor 5 equivalents. In some cases, functionality that required contrib modules is now built into CKEditor 5. In instances where a plugin does not have an equivalent, no data loss will occur but elements previously provided via the plugin may need to be added manually as HTML via source editing.') . '</p>';
+        $output .= '<h4>' . $this->t('Additional migration considerations for text formats with restricted HTML') . '</h4>';
         $output .= '<dl>';
-        $output .= '<dt>' . t('The “Allowed HTML tags" field in the “Limit allowed HTML tags and correct Faulty HTML" filter is now read-only') . '</dt>';
-        $output .= '<dd>' . t('This field accurately represents the tags/attributes allowed by a text format, but the allowed tags are based on which plugins are enabled and how they are configured. For example, enabling the Underline plugin adds the &lt;u&gt; tag to “Allowed HTML tags".') . '</dd>';
-        $output .= '<dt id="required-tags">' . t('The &lt;p&gt; and &lt;br &gt; tags will be automatically added to your text format.') . '</dt>';
-        $output .= '<dd>' . t('CKEditor 5 requires the &lt;p&gt; and &lt;br &gt; tags to achieve basic functionality. They will be automatically added to “Allowed HTML tags" on formats that previously did not allow them.') . '</dd>';
-        $output .= '<dt id="source-editing">' . t('Tags/attributes that are not explicitly supported by any plugin are supported by Source Editing') . '</dt>';
-        $output .= '<dd>' . t('When a necessary tag/attribute is not directly supported by an available plugin, the "Source Editing" plugin is enabled. This plugin is typically used for by passing the CKEditor 5 UI and editing contents as HTML source. In the settings for Source Editing, tags/attributes that aren\'t available via other plugins are added to Source Editing\'s "Manually editable HTML tags" setting so they are supported by the text format.') . '</dd>';
+        $output .= '<dt>' . $this->t('The “Allowed HTML tags" field in the “Limit allowed HTML tags and correct Faulty HTML" filter is now read-only') . '</dt>';
+        $output .= '<dd>' . $this->t('This field accurately represents the tags/attributes allowed by a text format, but the allowed tags are based on which plugins are enabled and how they are configured. For example, enabling the Underline plugin adds the &lt;u&gt; tag to “Allowed HTML tags".') . '</dd>';
+        $output .= '<dt id="required-tags">' . $this->t('The &lt;p&gt; and &lt;br &gt; tags will be automatically added to your text format.') . '</dt>';
+        $output .= '<dd>' . $this->t('CKEditor 5 requires the &lt;p&gt; and &lt;br &gt; tags to achieve basic functionality. They will be automatically added to “Allowed HTML tags" on formats that previously did not allow them.') . '</dd>';
+        $output .= '<dt id="source-editing">' . $this->t('Tags/attributes that are not explicitly supported by any plugin are supported by Source Editing') . '</dt>';
+        $output .= '<dd>' . $this->t('When a necessary tag/attribute is not directly supported by an available plugin, the "Source Editing" plugin is enabled. This plugin is typically used for by passing the CKEditor 5 UI and editing contents as HTML source. In the settings for Source Editing, tags/attributes that aren\'t available via other plugins are added to Source Editing\'s "Manually editable HTML tags" setting so they are supported by the text format.') . '</dd>';
         $output .= '</dl>';
         return $output;
     }
+    return NULL;
   }
 
   /**
@@ -96,8 +111,16 @@ class Ckeditor5Hooks {
 
   /**
    * Implements hook_form_FORM_ID_alter().
+   *
+   * This module's implementation of form_filter_format_form_alter() must
+   * happen after the editor module's implementation, as that implementation
+   * adds the active editor to $form_state.
    */
-  #[Hook('form_filter_format_form_alter')]
+  #[Hook('form_filter_format_form_alter',
+    order: new OrderAfter(
+      modules: ['editor'],
+    )
+  )]
   public function formFilterFormatFormAlter(array &$form, FormStateInterface $form_state, $form_id) : void {
     $editor = $form_state->get('editor');
     // CKEditor 5 plugin config determines the available HTML tags. If an HTML
@@ -109,29 +132,20 @@ class Ckeditor5Hooks {
       if (isset($form['filters']['settings']['filter_html']['allowed_html'])) {
         $filter_allowed_html =& $form['filters']['settings']['filter_html']['allowed_html'];
         $filter_allowed_html['#value_callback'] = [CKEditor5::class, 'getGeneratedAllowedHtmlValue'];
-        // Set readonly and add the form-disabled wrapper class as using #disabled
-        // or the disabled attribute will prevent the new values from being
-        // validated.
+        // Set readonly and add the form-disabled wrapper class as using
+        // #disabled or the disabled attribute will prevent the new values from
+        // being validated.
         $filter_allowed_html['#attributes']['readonly'] = TRUE;
         $filter_allowed_html['#wrapper_attributes']['class'][] = 'form-disabled';
-        $filter_allowed_html['#description'] = t('With CKEditor 5 this is a
+        $filter_allowed_html['#description'] = $this->t('With CKEditor 5 this is a
           read-only field. The allowed HTML tags and attributes are determined
           by the CKEditor 5 configuration. Manually removing tags would break
           enabled functionality, and any manually added tags would be removed by
           CKEditor 5 on render.');
-        // The media_filter_format_edit_form_validate validator is not needed
-        // with CKEditor 5 as it exists to enforce the inclusion of specific
-        // allowed tags that are added automatically by CKEditor 5. The
-        // validator is removed so it does not conflict with the automatic
-        // addition of those allowed tags.
-        $key = array_search('media_filter_format_edit_form_validate', $form['#validate']);
-        if ($key !== FALSE) {
-          unset($form['#validate'][$key]);
-        }
       }
     }
-    // Override the AJAX callbacks for changing editors, so multiple areas of the
-    // form can be updated on change.
+    // Override the AJAX callbacks for changing editors, so multiple areas of
+    // the form can be updated on change.
     $form['editor']['editor']['#ajax'] = [
       'callback' => '_update_ckeditor5_html_filter',
       'trigger_as' => [
@@ -157,7 +171,7 @@ class Ckeditor5Hooks {
         'ckeditor5_only' => 'true',
       ];
     }
-    /**
+    /*
      * Recursively adds AJAX listeners to plugin settings elements.
      *
      * These are added so allowed tags and other fields that have values
@@ -215,7 +229,8 @@ class Ckeditor5Hooks {
       $libraries['internal.drupal.ckeditor5.stylesheets'] = ['css' => ['theme' => array_fill_keys(array_values($css), [])]];
     }
     if ($extension === 'core') {
-      // CSS rule to resolve the conflict with z-index between CKEditor 5 and jQuery UI.
+      // CSS rule to resolve the conflict with z-index between CKEditor 5 and
+      // jQuery UI.
       $libraries['drupal.dialog']['css']['component']['modules/ckeditor5/css/ckeditor5.dialog.fix.css'] = [];
       // Fix the CKEditor 5 focus management in dialogs. Modify the library
       // declaration to ensure this file is always loaded after
@@ -227,7 +242,7 @@ class Ckeditor5Hooks {
       return;
     }
     // All possibles CKEditor 5 languages that can be used by Drupal.
-    $ckeditor_langcodes = array_values(_ckeditor5_get_langcode_mapping());
+    $ckeditor_langcodes = array_values($this->languageMapper->getMappings());
     if ($extension === 'core') {
       // Generate libraries for each of the CKEditor 5 translation files so that
       // the correct translation file can be attached depending on the current
@@ -245,7 +260,8 @@ class Ckeditor5Hooks {
         ];
       }
     }
-    // Copied from \Drupal\Core\Asset\LibraryDiscoveryParser::buildByExtension().
+    // Copied from
+    // \Drupal\Core\Asset\LibraryDiscoveryParser::buildByExtension().
     if ($extension === 'core') {
       $path = 'core';
     }
@@ -289,7 +305,11 @@ class Ckeditor5Hooks {
             $langcode = basename($file, '.js');
             // Only add languages that Drupal can understands.
             if (in_array($langcode, $ckeditor_langcodes)) {
-              $library['js']["{$dirname}/translations/{$langcode}.js"] = ['ckeditor5_langcode' => $langcode, 'minified' => TRUE, 'preprocess' => TRUE];
+              $library['js']["{$dirname}/translations/{$langcode}.js"] = [
+                'ckeditor5_langcode' => $langcode,
+                'minified' => TRUE,
+                'preprocess' => TRUE,
+              ];
             }
           }
         }
@@ -309,8 +329,8 @@ class Ckeditor5Hooks {
     // all translation files in a single aggregate.
     $ckeditor_dll_file = 'core/assets/vendor/ckeditor5/ckeditor5-dll/ckeditor5-dll.js';
     if (isset($javascript[$placeholder_file])) {
-      // Use the placeholder file weight to set all the translations files weights
-      // so they can be aggregated together as expected.
+      // Use the placeholder file weight to set all the translations files
+      // weights so they can be aggregated together as expected.
       $default_weight = $javascript[$placeholder_file]['weight'];
       if (isset($javascript[$ckeditor_dll_file])) {
         $default_weight = $javascript[$ckeditor_dll_file]['weight'];
@@ -321,7 +341,7 @@ class Ckeditor5Hooks {
       if (!\Drupal::moduleHandler()->moduleExists('locale')) {
         return;
       }
-      $ckeditor5_language = _ckeditor5_get_langcode_mapping($language->getId());
+      $ckeditor5_language = $this->languageMapper->getMapping($language->getId());
       // Remove all CKEditor 5 translations files that are not in the current
       // language.
       foreach ($javascript as $index => &$item) {
@@ -357,6 +377,74 @@ class Ckeditor5Hooks {
     $definitions['ckeditor5_valid_pair__format_and_editor']['mapping']['filters'] = $definitions['filter.format.*']['mapping']['filters'];
     // @see @see editor.editor.*.image_upload
     $definitions['ckeditor5_valid_pair__format_and_editor']['mapping']['image_upload'] = $definitions['editor.editor.*']['mapping']['image_upload'];
+  }
+
+  /**
+   * Implements hook_field_widget_single_element_form_alter().
+   */
+  #[Hook('field_widget_single_element_form_alter')]
+  public function fieldWidgetSingleElementFormAlter(&$element, FormStateInterface $form_state, $context): void {
+    // Add an attribute so that CKEditor 5 plugins can vary their behavior based
+    // on host entity type, host entity bundle and host entity language.
+    if (!empty($element['#type']) && $element['#type'] == 'text_format') {
+      $items = $context['items'];
+      assert($items instanceof FieldItemListInterface);
+      $host_entity = $items->getEntity();
+      $element['#attributes']['data-ckeditor5-host-entity-type'] = $host_entity->getEntityTypeId();
+      $element['#attributes']['data-ckeditor5-host-entity-bundle'] = $host_entity->bundle();
+      $element['#attributes']['data-ckeditor5-host-entity-langcode'] = $host_entity->language()->getId();
+    }
+  }
+
+  /**
+   * Implements hook_entity_bundle_info_alter().
+   */
+  #[Hook('entity_bundle_info_alter')]
+  public function entityBundleInfoAlter(array &$bundles): void {
+    if (isset($bundles['node'])) {
+      foreach ($bundles['node'] as $key => $bundle) {
+        $bundles['node'][$key]['ckeditor5_link_suggestions'] = TRUE;
+      }
+    }
+  }
+
+  /**
+   * Implements hook_ENTITY_TYPE_presave() for editor entities.
+   */
+  #[Hook('editor_presave')]
+  public function editorPresave(EditorInterface $editor): void {
+    if ($editor->getEditor() === 'ckeditor5') {
+      $settings = $editor->getSettings();
+      // @see ckeditor5_post_update_list_type()
+      if (array_key_exists('ckeditor5_list', $settings['plugins']) && array_key_exists('ckeditor5_sourceEditing', $settings['plugins'])) {
+        $source_edited = HTMLRestrictions::fromString(implode(' ', $settings['plugins']['ckeditor5_sourceEditing']['allowed_tags']));
+        $format_restrictions = HTMLRestrictions::fromTextFormat($editor->getFilterFormat());
+
+        // If neither <ol type> or <ul type> are allowed through Source Editing
+        // (the only way it could possibly be supported until now), and it is
+        // not an unrestricted text format (such as "Full HTML"), then set the
+        // new "styles" setting for the List plugin to false.
+        $ol_type = HTMLRestrictions::fromString('<ol type>');
+        $ul_type = HTMLRestrictions::fromString('<ul type>');
+        if (!array_key_exists('styles', $settings['plugins']['ckeditor5_list']['properties'])) {
+          $settings['plugins']['ckeditor5_list']['properties']['styles'] =
+            $ol_type->diff($source_edited)->allowsNothing() ||
+            $ul_type->diff($source_edited)->allowsNothing() ||
+            $format_restrictions->isUnrestricted();
+        }
+
+        // Update the Source Editing configuration too.
+        $settings['plugins']['ckeditor5_sourceEditing']['allowed_tags'] = $source_edited
+          ->diff($ol_type)
+          ->diff($ul_type)
+          ->toCKEditor5ElementsArray();
+      }
+      elseif (array_key_exists('ckeditor5_list', $settings['plugins']) && !array_key_exists('styles', $settings['plugins']['ckeditor5_list']['properties'])) {
+        $settings['plugins']['ckeditor5_list']['properties']['styles'] = FALSE;
+      }
+
+      $editor->setSettings($settings);
+    }
   }
 
 }

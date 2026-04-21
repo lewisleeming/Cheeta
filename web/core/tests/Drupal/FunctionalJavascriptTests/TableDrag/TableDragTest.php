@@ -7,12 +7,14 @@ namespace Drupal\FunctionalJavascriptTests\TableDrag;
 use Behat\Mink\Element\NodeElement;
 use Behat\Mink\Exception\ExpectationException;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests draggable table.
- *
- * @group javascript
  */
+#[Group('javascript')]
+#[RunTestsInSeparateProcesses]
 class TableDragTest extends WebDriverTestBase {
 
   /**
@@ -107,7 +109,7 @@ class TableDragTest extends WebDriverTestBase {
     $session = $this->getSession();
     $page = $session->getPage();
 
-    // Confirm touchevents detection is loaded with Tabledrag
+    // Confirm touchevents detection is loaded with Tabledrag.
     $this->assertNotNull($this->assertSession()->waitForElement('css', 'html.no-touchevents'));
     $weight_select1 = $page->findField("table[1][weight]");
     $weight_select2 = $page->findField("table[2][weight]");
@@ -548,7 +550,7 @@ class TableDragTest extends WebDriverTestBase {
   /**
    * Finds a row in the test table by the row ID.
    *
-   * @param string $id
+   * @param string|int $id
    *   The ID of the row.
    * @param string $table_id
    *   The ID of the parent table. Defaults to 'tabledrag-test-table'.

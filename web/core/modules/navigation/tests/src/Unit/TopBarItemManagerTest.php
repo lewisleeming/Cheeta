@@ -13,12 +13,14 @@ use Drupal\navigation\TopBarItemManager;
 use Drupal\navigation\TopBarItemManagerInterface;
 use Drupal\navigation\TopBarRegion;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\navigation\TopBarItemManager
- *
- * @group navigation
+ * Tests Drupal\navigation\TopBarItemManager.
  */
+#[CoversClass(TopBarItemManager::class)]
+#[Group('navigation')]
 class TopBarItemManagerTest extends UnitTestCase {
 
   use StringTranslationTrait;
@@ -49,19 +51,19 @@ class TopBarItemManagerTest extends UnitTestCase {
     // that are purposefully not in alphabetical order.
     $discovery->getDefinitions()->willReturn([
       'tools' => [
-        'label' => $this->t('Tools'),
+        'label' => 'Tools',
         'region' => TopBarRegion::Tools,
       ],
       'context' => [
-        'admin_label' => $this->t('Context'),
+        'admin_label' => 'Context',
         'region' => TopBarRegion::Context,
       ],
       'actions' => [
-        'label' => $this->t('Actions'),
+        'label' => 'Actions',
         'region' => TopBarRegion::Actions,
       ],
       'more_actions' => [
-        'label' => $this->t('More Actions'),
+        'label' => 'More Actions',
         'region' => TopBarRegion::Actions,
       ],
     ]);
@@ -71,7 +73,9 @@ class TopBarItemManagerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getDefinitions
+   * Tests definitions.
+   *
+   * @legacy-covers ::getDefinitions
    */
   public function testDefinitions(): void {
     $definitions = $this->manager->getDefinitions();
@@ -79,7 +83,7 @@ class TopBarItemManagerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getDefinitionsByRegion
+   * Tests get definitions by region.
    */
   public function testGetDefinitionsByRegion(): void {
     $tools = $this->manager->getDefinitionsByRegion(TopBarRegion::Tools);

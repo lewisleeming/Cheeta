@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\jsonapi\Functional;
 
+use Drupal\jsonapi\JsonApiSpec;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Access\AccessResultInterface;
@@ -79,10 +80,10 @@ trait ResourceResponseTestTrait {
     $merged_document['jsonapi'] = [
       'meta' => [
         'links' => [
-          'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+          'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
         ],
       ],
-      'version' => '1.0',
+      'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
     ];
     // Until we can reasonably know what caused an error, we shouldn't include
     // 'self' links in error documents. For example, a 404 shouldn't have a
@@ -494,7 +495,7 @@ trait ResourceResponseTestTrait {
    *   for testing related/relationship routes and includes.
    * @param string|null $detail
    *   (optional) Details for the JSON:API error object.
-   * @param string|bool|null $pointer
+   * @param string|false|null $pointer
    *   (optional) Document pointer for the JSON:API error object. FALSE to omit
    *   the pointer.
    *
@@ -525,7 +526,9 @@ trait ResourceResponseTestTrait {
       'jsonapi' => static::$jsonApiMember,
       'errors' => [$error],
     ], 403))
-      ->addCacheableDependency((new CacheableMetadata())->addCacheTags(['4xx-response', 'http_response'])->addCacheContexts(['url.query_args', 'url.site']))
+      ->addCacheableDependency((new CacheableMetadata())
+        ->addCacheTags(['4xx-response', 'http_response'])
+        ->addCacheContexts(['url.query_args', 'url.site']))
       ->addCacheableDependency($access);
   }
 

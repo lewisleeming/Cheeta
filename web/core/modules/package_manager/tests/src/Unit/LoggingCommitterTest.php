@@ -11,13 +11,19 @@ use Drupal\package_manager\ProcessOutputCallback;
 use Drupal\Tests\UnitTestCase;
 use PhpTuf\ComposerStager\API\Core\CommitterInterface;
 use PhpTuf\ComposerStager\API\Path\Value\PathInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers \Drupal\package_manager\LoggingCommitter
- * @group package_manager
+ * Tests Logging Committer.
  */
+#[Group('package_manager')]
+#[CoversClass(LoggingCommitter::class)]
 class LoggingCommitterTest extends UnitTestCase {
 
+  /**
+   * Tests the output of LoggingCommitter().
+   */
   public function testDecoratedCommitterIsCalled(): void {
     $decorated = $this->createMock(CommitterInterface::class);
 

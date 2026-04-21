@@ -3,12 +3,12 @@
 namespace Drupal\Component\Annotation\Plugin\Discovery;
 
 use Drupal\Component\Annotation\AnnotationInterface;
+use Drupal\Component\Annotation\Doctrine\AnnotationRegistry;
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Component\Plugin\Discovery\DiscoveryInterface;
 use Drupal\Component\Annotation\Doctrine\SimpleAnnotationReader;
 use Drupal\Component\Annotation\Doctrine\StaticReflectionParser;
 use Drupal\Component\Annotation\Reflection\MockFileFinder;
-use Doctrine\Common\Annotations\AnnotationRegistry;
 use Drupal\Component\Plugin\Discovery\DiscoveryTrait;
 use Drupal\Component\Utility\Crypt;
 
@@ -22,7 +22,7 @@ class AnnotatedClassDiscovery implements DiscoveryInterface {
   /**
    * The namespaces within which to find plugin classes.
    *
-   * @var string[]
+   * @var array<string, list<string>>
    */
   protected $pluginNamespaces;
 
@@ -60,12 +60,12 @@ class AnnotatedClassDiscovery implements DiscoveryInterface {
   /**
    * Constructs a new instance.
    *
-   * @param string[] $plugin_namespaces
+   * @param array<string, list<string>> $plugin_namespaces
    *   (optional) An array of namespace that may contain plugin implementations.
    *   Defaults to an empty array.
    * @param string $plugin_definition_annotation_name
-   *   (optional) The name of the annotation that contains the plugin definition.
-   *   Defaults to 'Drupal\Component\Annotation\Plugin'.
+   *   (optional) The name of the annotation that contains the plugin
+   *   definition. Defaults to 'Drupal\Component\Annotation\Plugin'.
    * @param string[] $annotation_namespaces
    *   (optional) Additional namespaces to be scanned for annotation classes.
    */
@@ -123,7 +123,8 @@ class AnnotatedClassDiscovery implements DiscoveryInterface {
             if ($fileinfo->getExtension() == 'php') {
               if ($cached = $this->fileCache->get($fileinfo->getPathName())) {
                 if (isset($cached['id'])) {
-                  // Explicitly unserialize this to create a new object instance.
+                  // Explicitly unserialize this to create a new object
+                  // instance.
                   $definitions[$cached['id']] = unserialize($cached['content']);
                 }
                 continue;
@@ -180,7 +181,8 @@ class AnnotatedClassDiscovery implements DiscoveryInterface {
   /**
    * Gets an array of PSR-4 namespaces to search for plugin classes.
    *
-   * @return string[]
+   * @return array<string, list<string>>
+   *   The PSR-4 namespaces for the plugin class.
    */
   protected function getPluginNamespaces() {
     return $this->pluginNamespaces;

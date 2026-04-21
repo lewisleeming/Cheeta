@@ -175,7 +175,7 @@ abstract class MigrateTestBase extends KernelTestBase implements MigrateMessageI
       $this->migration = $migration;
     }
     if ($this instanceof MigrateDumpAlterInterface) {
-      static::migrateDumpAlter($this);
+      $this->migrateDumpAlter($this);
     }
 
     $this->prepareMigration($this->migration);
@@ -203,7 +203,7 @@ abstract class MigrateTestBase extends KernelTestBase implements MigrateMessageI
       $this->migrateMessages[$type][] = $message;
     }
     else {
-      $this->assertEquals('status', $type, $message);
+      $this->assertEquals('status', $type, (string) $message);
     }
   }
 

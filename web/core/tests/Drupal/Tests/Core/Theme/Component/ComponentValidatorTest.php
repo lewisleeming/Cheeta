@@ -4,28 +4,36 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Theme\Component;
 
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Plugin\Component;
+use Drupal\Core\Render\Component\Exception\InvalidComponentException;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Theme\Component\ComponentValidator;
-use Drupal\Core\Render\Component\Exception\InvalidComponentException;
-use Drupal\Core\Plugin\Component;
-use PHPUnit\Framework\TestCase;
+use Drupal\Tests\UnitTestCaseTest;
+use JsonSchema\ConstraintError;
+use JsonSchema\Constraints\Factory;
+use JsonSchema\Constraints\FormatConstraint;
+use JsonSchema\Entity\JsonPointer;
+use JsonSchema\Validator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Yaml\Yaml;
 
 /**
  * Unit tests for the component validation.
- *
- * @coversDefaultClass \Drupal\Core\Theme\Component\ComponentValidator
- * @group sdc
  */
-class ComponentValidatorTest extends TestCase {
+#[CoversClass(ComponentValidator::class)]
+#[Group('sdc')]
+class ComponentValidatorTest extends UnitTestCaseTest {
 
   /**
    * Tests that valid component definitions don't cause errors.
    *
-   * @dataProvider dataProviderValidateDefinitionValid
-   *
    * @throws \Drupal\Core\Render\Component\Exception\InvalidComponentException
    */
+  #[DataProvider('dataProviderValidateDefinitionValid')]
   public function testValidateDefinitionValid(array $definition): void {
     $component_validator = new ComponentValidator();
     $component_validator->setValidator();
@@ -52,9 +60,8 @@ class ComponentValidatorTest extends TestCase {
 
   /**
    * Tests invalid component definitions.
-   *
-   * @dataProvider dataProviderValidateDefinitionInvalid
    */
+  #[DataProvider('dataProviderValidateDefinitionInvalid')]
   public function testValidateDefinitionInvalid(array $definition): void {
     $this->expectException(InvalidComponentException::class);
     $component_validator = new ComponentValidator();
@@ -102,16 +109,93 @@ class ComponentValidatorTest extends TestCase {
     // allowed as the allowed type.
     $cta_with_non_string_prop_type['props']['properties']['text']['type'] = ['string', []];
     yield 'non string type (Array)' => [$cta_with_non_string_prop_type];
+
+    $cta_with_invalid_slot_type = $valid_cta;
+    $cta_with_invalid_slot_type['slots'] = [
+      'valid_slot' => [
+        'title' => 'Valid slot',
+        'description' => 'Valid slot description',
+      ],
+      'invalid_slot' => [
+        'title' => [
+          'hello' => 'Invalid slot',
+          'world' => 'Invalid slot',
+        ],
+        'description' => 'Title must be string',
+      ],
+    ];
+    yield 'invalid slot (type)' => [$cta_with_invalid_slot_type];
+
+    $cta_with_invalid_slot_name = $valid_cta;
+    $cta_with_invalid_slot_name['slots'] = [
+      'valid_slot' => [
+        'title' => 'Valid slot',
+        'description' => 'Valid slot description',
+      ],
+      'invalid slot' => [
+        'title' => 'Invalid slot',
+        'description' => 'Slot name cannot have spaces',
+      ],
+    ];
+    yield 'invalid slot (name with spaces)' => [$cta_with_invalid_slot_name];
+
+    $cta_with_invalid_variant_title_type = $valid_cta;
+    $cta_with_invalid_variant_title_type['variants'] = [
+      'valid_variant' => [
+        'title' => 'Valid variant',
+        'description' => 'Valid variant description',
+      ],
+      'invalid_variant' => [
+        'title' => [
+          'hello' => 'Invalid variant',
+          'world' => 'Invalid variant',
+        ],
+        'description' => 'Title must be string',
+      ],
+    ];
+    yield 'invalid variant title (type)' => [$cta_with_invalid_variant_title_type];
+
+    $cta_with_missing_variant_title_type = $valid_cta;
+    $cta_with_missing_variant_title_type['variants'] = [
+      'valid_variant' => [
+        'title' => 'Valid variant',
+        'description' => 'Valid variant description',
+      ],
+      'invalid_variant' => [
+        'description' => 'Title is required',
+      ],
+    ];
+    yield 'invalid variant title (missing title)' => [$cta_with_missing_variant_title_type];
+
+    $cta_with_invalid_variant_description_type = $valid_cta;
+    $cta_with_invalid_variant_description_type['variants'] = [
+      'valid_variant' => [
+        'title' => 'Valid variant',
+        'description' => 'Valid variant description',
+      ],
+      'invalid_variant' => [
+        'title' => 'Invalid variant',
+        'description' => [
+          'this' => 'Description must be',
+          'that' => 'a string',
+        ],
+      ],
+    ];
+    yield 'invalid variant description (type)' => [$cta_with_invalid_variant_description_type];
   }
 
   /**
    * Tests that valid props are handled properly.
    *
-   * @dataProvider dataProviderValidatePropsValid
-   *
    * @throws \Drupal\Core\Render\Component\Exception\InvalidComponentException
    */
+  #[DataProvider('dataProviderValidatePropsValid')]
   public function testValidatePropsValid(array $context, string $component_id, array $definition): void {
+    $translation = $this->getStringTranslationStub();
+    $container = new ContainerBuilder();
+    $container->set('string_translation', $translation);
+    \Drupal::setContainer($container);
+
     $component = new Component(
       ['app_root' => '/fake/path/root'],
       'sdc_test:' . $component_id,
@@ -153,13 +237,49 @@ class ComponentValidatorTest extends TestCase {
   }
 
   /**
+   * Tests we can use a custom validator to validate props.
+   */
+  public function testCustomValidator(): void {
+    $translation = $this->getStringTranslationStub();
+    $container = new ContainerBuilder();
+    $container->set('string_translation', $translation);
+    \Drupal::setContainer($container);
+
+    $component = new Component(
+      ['app_root' => '/fake/path/root'],
+      'sdc_test:my-cta',
+      static::loadComponentDefinitionFromFs('my-cta'),
+    );
+    $component_validator = new ComponentValidator();
+    // A validator with a constraint factory that uses a custom constraint for
+    // checking format.
+    $component_validator->setValidator(new Validator((new Factory())->setConstraintClass('format', UrlHelperFormatConstraint::class)));
+    self::assertTrue(
+      $component_validator->validateProps([
+        'text' => 'Can Pica',
+        // This is a valid URI but for v5.2 of justinrainbow/json-schema it
+        // does not pass validation without a custom constraint for format.
+        // We pass a custom factory and it should be used.
+        'href' => 'entity:node/1',
+        'target' => '_blank',
+        'attributes' => new Attribute(['key' => 'value']),
+      ], $component),
+      'The valid component props threw an error.'
+    );
+  }
+
+  /**
    * Tests that invalid props are handled properly.
-   *
-   * @dataProvider dataProviderValidatePropsInvalid
    *
    * @throws \Drupal\Core\Render\Component\Exception\InvalidComponentException
    */
+  #[DataProvider('dataProviderValidatePropsInvalid')]
   public function testValidatePropsInvalid(array $context, string $component_id, array $definition, string $expected_exception_message): void {
+    $translation = $this->getStringTranslationStub();
+    $container = new ContainerBuilder();
+    $container->set('string_translation', $translation);
+    \Drupal::setContainer($container);
+
     $component = new Component(
       ['app_root' => '/fake/path/root'],
       'sdc_test:' . $component_id,
@@ -236,6 +356,29 @@ class ComponentValidatorTest extends TestCase {
         'description' => 'My description',
       ]
     );
+  }
+
+}
+
+/**
+ * Defines a custom format constraint for json-schema.
+ */
+class UrlHelperFormatConstraint extends FormatConstraint {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function check(&$element, $schema = NULL, ?JsonPointer $path = NULL, $i = NULL): void {
+    if (!isset($schema->format) || $this->factory->getConfig(self::CHECK_MODE_DISABLE_FORMAT)) {
+      return;
+    }
+    if ($schema->format === 'uri') {
+      if (\is_string($element) && !UrlHelper::isValid($element)) {
+        $this->addError(ConstraintError::FORMAT_URL, $path, ['format' => $schema->format]);
+      }
+      return;
+    }
+    parent::check($element, $schema, $path, $i);
   }
 
 }

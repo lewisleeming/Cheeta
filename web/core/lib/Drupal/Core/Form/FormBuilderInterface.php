@@ -23,6 +23,11 @@ interface FormBuilderInterface {
   const AJAX_FORM_REQUEST = 'ajax_form';
 
   /**
+   * Header name for HTMX requests.
+   */
+  const HTMX_REQUEST = 'HX-Request';
+
+  /**
    * Determines the ID of a form.
    *
    * @param \Drupal\Core\Form\FormInterface|string $form_arg
@@ -114,10 +119,11 @@ interface FormBuilderInterface {
    *   (optional) A previously built $form. Used to retain the #build_id and
    *   #action properties in Ajax callbacks and similar partial form rebuilds.
    *   The only properties copied from $old_form are the ones which both exist
-   *   in $old_form and for which $form_state->getRebuildInfo()['copy'][PROPERTY]
-   *   is TRUE. If $old_form is not passed, the entire $form is rebuilt freshly.
-   *   'rebuild_info' needs to be a separate top-level property next to
-   *   'build_info', since the contained data must not be cached.
+   *   in $old_form and for which
+   *   $form_state->getRebuildInfo()['copy'][PROPERTY] is TRUE. If $old_form is
+   *   not passed, the entire $form is rebuilt freshly. 'rebuild_info' needs to
+   *   be a separate top-level property next to 'build_info', since the
+   *   contained data must not be cached.
    *
    * @return array
    *   The newly built form.
@@ -185,6 +191,7 @@ interface FormBuilderInterface {
    *   array.
    *
    * @return mixed|\Symfony\Component\HttpFoundation\Response
+   *   The form array or a response object.
    */
   public function retrieveForm($form_id, FormStateInterface &$form_state);
 
@@ -205,6 +212,7 @@ interface FormBuilderInterface {
    *   sanitized \Drupal::request()->request data, is also accumulated here.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|null
+   *   The form response or NULL when the form was submitted programmatically.
    */
   public function processForm($form_id, &$form, FormStateInterface &$form_state);
 
@@ -318,6 +326,7 @@ interface FormBuilderInterface {
    *   as well as the sanitized \Drupal::request()->request data.
    *
    * @return array
+   *   The completely built form.
    */
   public function doBuildForm($form_id, &$element, FormStateInterface &$form_state);
 

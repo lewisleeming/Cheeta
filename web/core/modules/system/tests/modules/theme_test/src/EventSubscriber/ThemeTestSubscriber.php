@@ -19,6 +19,8 @@ class ThemeTestSubscriber implements EventSubscriberInterface {
   /**
    * The used container.
    *
+   * @var object
+   *
    * @todo This variable is never initialized, so we don't know what it is.
    *   See https://www.drupal.org/node/2721315
    */
@@ -77,27 +79,10 @@ class ThemeTestSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Ensures that the theme registry was not initialized.
-   */
-  public function onView(RequestEvent $event) {
-    $current_route = $this->currentRouteMatch->getRouteName();
-    $entity_autocomplete_route = [
-      'system.entity_autocomplete',
-    ];
-
-    if (in_array($current_route, $entity_autocomplete_route)) {
-      if ($this->container->initialized('theme.registry')) {
-        throw new \Exception('registry initialized');
-      }
-    }
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function getSubscribedEvents(): array {
     $events[KernelEvents::REQUEST][] = ['onRequest'];
-    $events[KernelEvents::VIEW][] = ['onView', -1000];
     return $events;
   }
 

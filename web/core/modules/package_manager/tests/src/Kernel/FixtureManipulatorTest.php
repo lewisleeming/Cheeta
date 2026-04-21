@@ -8,14 +8,18 @@ use Drupal\fixture_manipulator\ActiveFixtureManipulator;
 use Drupal\fixture_manipulator\FixtureManipulator;
 use Drupal\package_manager\ComposerInspector;
 use Drupal\package_manager\InstalledPackagesList;
-use Drupal\Tests\package_manager\Traits\InstalledPackagesListTrait;
 use Drupal\package_manager\PathLocator;
+use Drupal\Tests\package_manager\Traits\InstalledPackagesListTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\fixture_manipulator\FixtureManipulator
- *
- * @group package_manager
+ * Tests Drupal\fixture_manipulator\FixtureManipulator.
  */
+#[CoversClass(FixtureManipulator::class)]
+#[Group('package_manager')]
+#[RunTestsInSeparateProcesses]
 class FixtureManipulatorTest extends PackageManagerKernelTestBase {
 
   use InstalledPackagesListTrait;
@@ -78,7 +82,7 @@ class FixtureManipulatorTest extends PackageManagerKernelTestBase {
   }
 
   /**
-   * @covers ::addPackage
+   * Tests add package.
    */
   public function testAddPackage(): void {
     // Packages cannot be added without a name.
@@ -129,8 +133,8 @@ class FixtureManipulatorTest extends PackageManagerKernelTestBase {
     catch (\LogicException $e) {
       $this->assertStringContainsString("Expected package 'my/package' to not be installed, but it was.", $e->getMessage());
     }
-    // Ensure that none of the failed calls to ::addPackage() changed the installed
-    // packages.
+    // Ensure that none of the failed calls to ::addPackage() changed the
+    // installed packages.
     $this->assertPackageListsEqual($this->originalFixturePackages, $this->inspector->getInstalledPackagesList($this->dir));
     $root_info = $this->inspector->getRootPackageInfo($this->dir);
     $this->assertSame(
@@ -140,7 +144,7 @@ class FixtureManipulatorTest extends PackageManagerKernelTestBase {
   }
 
   /**
-   * @covers ::modifyPackageConfig
+   * Tests modify package config.
    */
   public function testModifyPackageConfig(): void {
     // Assert ::modifyPackage() works with a package in an existing fixture not
@@ -172,7 +176,7 @@ class FixtureManipulatorTest extends PackageManagerKernelTestBase {
   }
 
   /**
-   * @covers ::removePackage
+   * Tests remove package.
    */
   public function testRemovePackage(): void {
     // We should not be able to remove a package that's not installed.
@@ -213,7 +217,7 @@ class FixtureManipulatorTest extends PackageManagerKernelTestBase {
   }
 
   /**
-   * @covers ::addDotGitFolder
+   * Tests add dot git folder.
    */
   public function testAddDotGitFolder(): void {
     $path_locator = $this->container->get(PathLocator::class);

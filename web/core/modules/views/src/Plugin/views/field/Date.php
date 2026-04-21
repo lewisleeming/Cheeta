@@ -97,7 +97,10 @@ class Date extends FieldPluginBase {
 
     $date_formats = [];
     foreach ($this->dateFormatStorage->loadMultiple() as $machine_name => $value) {
-      $date_formats[$machine_name] = $this->t('@name format: @date', ['@name' => $value->label(), '@date' => $this->dateFormatter->format($this->time->getRequestTime(), $machine_name)]);
+      $date_formats[$machine_name] = $this->t('@name format: @date', [
+        '@name' => $value->label(),
+        '@date' => $this->dateFormatter->format($this->time->getRequestTime(), $machine_name),
+      ]);
     }
 
     $form['date_format'] = [
@@ -121,8 +124,20 @@ class Date extends FieldPluginBase {
       '#description' => $this->t('If "Custom", see <a href="https://www.php.net/manual/datetime.format.php#refsect1-datetime.format-parameters" target="_blank">the PHP docs</a> for date formats. Otherwise, enter the number of different time units to display, which defaults to 2.'),
       '#default_value' => $this->options['custom_date_format'] ?? '',
     ];
-    // Setup #states for all possible date_formats on the custom_date_format form element.
-    foreach (['custom', 'raw time ago', 'time ago', 'raw time hence', 'time hence', 'raw time span', 'time span', 'raw time span', 'inverse time span', 'time span'] as $custom_date_possible) {
+    // Setup #states for all possible date_formats on the custom_date_format
+    // form element.
+    foreach ([
+      'custom',
+      'raw time ago',
+      'time ago',
+      'raw time hence',
+      'time hence',
+      'raw time span',
+      'time span',
+      'raw time span',
+      'inverse time span',
+      'time span',
+    ] as $custom_date_possible) {
       $form['custom_date_format']['#states']['visible'][] = [
         ':input[name="options[date_format]"]' => ['value' => $custom_date_possible],
       ];
@@ -149,7 +164,18 @@ class Date extends FieldPluginBase {
   public function render(ResultRow $values) {
     $value = $this->getValue($values);
     $format = $this->options['date_format'];
-    if (in_array($format, ['custom', 'raw time ago', 'time ago', 'raw time hence', 'time hence', 'raw time span', 'time span', 'raw time span', 'inverse time span', 'time span'])) {
+    if (in_array($format, [
+      'custom',
+      'raw time ago',
+      'time ago',
+      'raw time hence',
+      'time hence',
+      'raw time span',
+      'time span',
+      'raw time span',
+      'inverse time span',
+      'time span',
+    ])) {
       $custom_format = $this->options['custom_date_format'];
     }
 
@@ -172,13 +198,22 @@ class Date extends FieldPluginBase {
           return $this->t('%time hence', ['%time' => $this->dateFormatter->formatTimeDiffUntil($value, ['granularity' => is_numeric($custom_format) ? $custom_format : 2])]);
 
         case 'raw time span':
-          return ($time_diff < 0 ? '-' : '') . $this->dateFormatter->formatTimeDiffSince($value, ['strict' => FALSE, 'granularity' => is_numeric($custom_format) ? $custom_format : 2]);
+          return ($time_diff < 0 ? '-' : '') . $this->dateFormatter->formatTimeDiffSince($value, [
+            'strict' => FALSE,
+            'granularity' => is_numeric($custom_format) ? $custom_format : 2,
+          ]);
 
         case 'inverse time span':
-          return ($time_diff > 0 ? '-' : '') . $this->dateFormatter->formatTimeDiffSince($value, ['strict' => FALSE, 'granularity' => is_numeric($custom_format) ? $custom_format : 2]);
+          return ($time_diff > 0 ? '-' : '') . $this->dateFormatter->formatTimeDiffSince($value, [
+            'strict' => FALSE,
+            'granularity' => is_numeric($custom_format) ? $custom_format : 2,
+          ]);
 
         case 'time span':
-          $time = $this->dateFormatter->formatTimeDiffSince($value, ['strict' => FALSE, 'granularity' => is_numeric($custom_format) ? $custom_format : 2]);
+          $time = $this->dateFormatter->formatTimeDiffSince($value, [
+            'strict' => FALSE,
+            'granularity' => is_numeric($custom_format) ? $custom_format : 2,
+          ]);
           return ($time_diff < 0) ? $this->t('%time hence', ['%time' => $time]) : $this->t('%time ago', ['%time' => $time]);
 
         case 'custom':

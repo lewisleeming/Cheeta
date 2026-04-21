@@ -11,6 +11,7 @@ use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Database\StatementWrapperIterator;
 use Drupal\Core\Database\SupportsTemporaryTablesInterface;
 use Drupal\Core\Database\Transaction\TransactionManagerInterface;
+use Pdo\Pgsql;
 
 // cSpell:ignore ilike nextval
 
@@ -92,6 +93,8 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
    * Constructs a connection object.
    */
   public function __construct(\PDO $connection, array $connection_options) {
+    // @phpstan-ignore class.notFound
+    assert(\PHP_VERSION_ID >= 80400 ? $connection instanceof Pgsql : TRUE);
     // Sanitize the schema name here, so we do not have to do it in other
     // functions.
     if (isset($connection_options['schema']) && ($connection_options['schema'] !== 'public')) {
@@ -150,8 +153,9 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     // http://bugs.php.net/bug.php?id=53217
     // so backslashes in the password need to be doubled up.
     // The bug was reported against pdo_pgsql 1.0.2, backslashes in passwords
-    // will break on this doubling up when the bug is fixed, so check the version
-    // elseif (phpversion('pdo_pgsql') < 'version_this_was_fixed_in') {
+    // will break on this doubling up when the bug is fixed, so check the
+    // version.
+    // "elseif (phpversion('pdo_pgsql') < 'version_this_was_fixed_in') {".
     else {
       $connection_options['password'] = str_replace('\\', '\\\\', $connection_options['password']);
     }
@@ -177,7 +181,13 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     ];
 
     try {
-      $pdo = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+      if (\PHP_VERSION_ID >= 80400) {
+        // @phpstan-ignore class.notFound
+        $pgsql = new Pgsql($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+      }
+      else {
+        $pgsql = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+      }
     }
     catch (\PDOException $e) {
       if (static::getSQLState($e) == static::CONNECTION_FAILURE) {
@@ -191,7 +201,7 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
       throw $e;
     }
 
-    return $pdo;
+    return $pgsql;
   }
 
   /**
@@ -255,6 +265,9 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     return parent::prepareStatement($query, $options, $allow_row_count);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function queryRange($query, $from, $count, array $args = [], array $options = []) {
     return $this->query($query . ' LIMIT ' . (int) $count . ' OFFSET ' . (int) $from, $args, $options);
   }
@@ -268,10 +281,16 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     return $tablename;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function driver() {
     return 'pgsql';
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function databaseType() {
     return 'pgsql';
   }
@@ -318,6 +337,9 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function mapConditionOperator($operator) {
     return static::$postgresqlConditionOperatorMap[$operator] ?? NULL;
   }
@@ -362,7 +384,7 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
    * The main use for this method is to mimic InnoDB functionality, which
    * provides an inherent savepoint before any query in a transaction.
    *
-   * @param $savepoint_name
+   * @param string $savepoint_name
    *   A string representing the savepoint name. By default,
    *   "mimic_implicit_commit" is used.
    */
@@ -375,7 +397,7 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
   /**
    * Release a savepoint by name.
    *
-   * @param $savepoint_name
+   * @param string $savepoint_name
    *   A string representing the savepoint name. By default,
    *   "mimic_implicit_commit" is used.
    */
@@ -388,7 +410,7 @@ class Connection extends DatabaseConnection implements SupportsTemporaryTablesIn
   /**
    * Rollback a savepoint by name if it exists.
    *
-   * @param $savepoint_name
+   * @param string $savepoint_name
    *   A string representing the savepoint name. By default,
    *   "mimic_implicit_commit" is used.
    */

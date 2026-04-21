@@ -16,11 +16,15 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGenerator;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @coversDefaultClass \Drupal\Core\Utility\LinkGenerator
- * @group Utility
+ * Tests Drupal\Core\Utility\LinkGenerator.
  */
+#[CoversClass(LinkGenerator::class)]
+#[Group('Utility')]
 class LinkGeneratorTest extends UnitTestCase {
 
   /**
@@ -60,6 +64,8 @@ class LinkGeneratorTest extends UnitTestCase {
 
   /**
    * Contains the LinkGenerator default options.
+   *
+   * @var array
    */
   protected $defaultOptions = [
     'query' => [],
@@ -91,7 +97,7 @@ class LinkGeneratorTest extends UnitTestCase {
    * @return array
    *   Returns some test data.
    */
-  public static function providerTestGenerateHrefs() {
+  public static function providerTestGenerateHrefs(): array {
     return [
       // Test that the URL returned by the URL generator is used.
       ['test_route_1', [], FALSE, '/test-route-1'],
@@ -107,9 +113,8 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Utility\LinkGenerator::generate()
    * @see \Drupal\Tests\Core\Utility\LinkGeneratorTest::providerTestGenerate()
-   *
-   * @dataProvider providerTestGenerateHrefs
    */
+  #[DataProvider('providerTestGenerateHrefs')]
   public function testGenerateHrefs($route_name, array $parameters, $absolute, $expected_url): void {
     $this->urlGenerator->expects($this->once())
       ->method('generateFromRoute')
@@ -128,8 +133,6 @@ class LinkGeneratorTest extends UnitTestCase {
 
   /**
    * Tests the generate() method with a route.
-   *
-   * @covers ::generate
    */
   public function testGenerate(): void {
     $this->urlGenerator->expects($this->once())
@@ -139,7 +142,7 @@ class LinkGeneratorTest extends UnitTestCase {
 
     $this->moduleHandler->expects($this->once())
       ->method('alter')
-      ->with('link', $this->isType('array'));
+      ->with('link', $this->isArray());
 
     $url = new Url('test_route_1', [], ['fragment' => 'the-fragment']);
     $url->setUrlGenerator($this->urlGenerator);
@@ -158,15 +161,13 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * The set_active_class option is set to TRUE to ensure we do not get the
    * active class and the data-drupal-link-system-path attribute.
-   *
-   * @covers ::generate
    */
   public function testGenerateNoLink(): void {
     $this->urlGenerator->expects($this->never())
       ->method('generateFromRoute');
     $this->moduleHandler->expects($this->exactly(2))
       ->method('alter')
-      ->with('link', $this->isType('array'));
+      ->with('link', $this->isArray());
 
     $url = Url::fromRoute('<nolink>');
     $url->setUrlGenerator($this->urlGenerator);
@@ -190,8 +191,6 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * The set_active_class option is set to TRUE to ensure we do not get the
    * active class and the data-drupal-link-system-path attribute.
-   *
-   * @covers ::generate
    */
   public function testGenerateNone(): void {
     $this->urlGenerator->expects($this->once())
@@ -201,7 +200,7 @@ class LinkGeneratorTest extends UnitTestCase {
 
     $this->moduleHandler->expects($this->once())
       ->method('alter')
-      ->with('link', $this->isType('array'));
+      ->with('link', $this->isArray());
 
     $url = Url::fromRoute('<none>');
     $url->setUrlGenerator($this->urlGenerator);
@@ -213,15 +212,13 @@ class LinkGeneratorTest extends UnitTestCase {
 
   /**
    * Tests the generate() method with the <button> route.
-   *
-   * @covers ::generate
    */
   public function testGenerateButton(): void {
     $this->urlGenerator->expects($this->never())
       ->method('generateFromRoute');
     $this->moduleHandler->expects($this->exactly(2))
       ->method('alter')
-      ->with('link', $this->isType('array'));
+      ->with('link', $this->isArray());
 
     $url = Url::fromRoute('<button>');
     $url->setUrlGenerator($this->urlGenerator);
@@ -244,8 +241,6 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * The set_active_class option is set to TRUE to ensure this does not cause
    * an error together with an external URL.
-   *
-   * @covers ::generate
    */
   public function testGenerateExternal(): void {
     $this->urlAssembler->expects($this->once())
@@ -255,7 +250,7 @@ class LinkGeneratorTest extends UnitTestCase {
 
     $this->moduleHandler->expects($this->once())
       ->method('alter')
-      ->with('link', $this->isType('array'));
+      ->with('link', $this->isArray());
 
     $this->urlAssembler->expects($this->once())
       ->method('assemble')
@@ -278,8 +273,6 @@ class LinkGeneratorTest extends UnitTestCase {
 
   /**
    * Tests the generate() method with a URL containing double quotes.
-   *
-   * @covers ::generate
    */
   public function testGenerateUrlWithQuotes(): void {
     $this->urlAssembler->expects($this->once())
@@ -579,8 +572,6 @@ class LinkGeneratorTest extends UnitTestCase {
 
   /**
    * Tests altering the URL object using hook_link_alter().
-   *
-   * @covers ::generate
    */
   public function testGenerateWithAlterHook(): void {
     $options = ['query' => [], 'language' => NULL, 'set_active_class' => FALSE, 'absolute' => FALSE];
@@ -608,7 +599,7 @@ class LinkGeneratorTest extends UnitTestCase {
 
     $this->moduleHandler->expects($this->atLeastOnce())
       ->method('alter')
-      ->willReturnCallback(function ($hook, &$options) {
+      ->willReturnCallback(function ($hook, &$options): void {
         $options['url'] = (new Url('test_route_1'))->setUrlGenerator($this->urlGenerator);
       });
 

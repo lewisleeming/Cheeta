@@ -8,20 +8,25 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\Container;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @coversDefaultClass \Drupal\Core\Cache\Cache
- * @group Cache
+ * Tests Drupal\Core\Cache\Cache.
  */
+#[CoversClass(Cache::class)]
+#[Group('Cache')]
 class CacheTest extends UnitTestCase {
 
   /**
    * Provides a list of cache tags arrays.
    *
    * @return array
+   *   An array of cache tags arrays.
    */
-  public function validateTagsProvider() {
+  public function validateTagsProvider(): array {
     return [
       [[], FALSE],
       [['foo'], FALSE],
@@ -49,8 +54,9 @@ class CacheTest extends UnitTestCase {
    * Provides a list of pairs of cache tags arrays to be merged.
    *
    * @return array
+   *   An array of pairs of cache tags arrays to be merged.
    */
-  public static function mergeTagsProvider() {
+  public static function mergeTagsProvider(): array {
     return [
       [[], [], []],
       [['bar', 'foo'], ['bar'], ['foo']],
@@ -64,10 +70,9 @@ class CacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::mergeTags
-   *
-   * @dataProvider mergeTagsProvider
+   * Tests merge tags.
    */
+  #[DataProvider('mergeTagsProvider')]
   public function testMergeTags(array $expected, ...$cache_tags): void {
     $this->assertEqualsCanonicalizing($expected, Cache::mergeTags(...$cache_tags));
   }
@@ -76,8 +81,9 @@ class CacheTest extends UnitTestCase {
    * Provides a list of pairs of cache tags arrays to be merged.
    *
    * @return array
+   *   An array of pairs of cache tags arrays to be merged.
    */
-  public static function mergeMaxAgesProvider() {
+  public static function mergeMaxAgesProvider(): array {
     return [
       [Cache::PERMANENT, Cache::PERMANENT, Cache::PERMANENT],
       [60, 60, 60],
@@ -103,10 +109,9 @@ class CacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::mergeMaxAges
-   *
-   * @dataProvider mergeMaxAgesProvider
+   * Tests merge max ages.
    */
+  #[DataProvider('mergeMaxAgesProvider')]
   public function testMergeMaxAges($expected, ...$max_ages): void {
     $this->assertSame($expected, Cache::mergeMaxAges(...$max_ages));
   }
@@ -115,8 +120,9 @@ class CacheTest extends UnitTestCase {
    * Provides a list of pairs of cache contexts arrays to be merged.
    *
    * @return array
+   *   An array of pairs of cache contexts arrays to be merged.
    */
-  public static function mergeCacheContextsProvide() {
+  public static function mergeCacheContextsProvide(): array {
     return [
       [[], [], []],
       [['foo'], [], ['foo']],
@@ -137,10 +143,11 @@ class CacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::mergeContexts
+   * Tests merge cache contexts.
    *
-   * @dataProvider mergeCacheContextsProvide
+   * @legacy-covers ::mergeContexts
    */
+  #[DataProvider('mergeCacheContextsProvide')]
   public function testMergeCacheContexts(array $expected, ...$contexts): void {
     $cache_contexts_manager = $this->prophesize(CacheContextsManager::class);
     $cache_contexts_manager->assertValidTokens(Argument::any())->willReturn(TRUE);
@@ -154,8 +161,9 @@ class CacheTest extends UnitTestCase {
    * Provides a list of pairs of (prefix, suffixes) to build cache tags from.
    *
    * @return array
+   *   An array of pairs of (prefix, suffixes) to build cache tags from.
    */
-  public static function buildTagsProvider() {
+  public static function buildTagsProvider(): array {
     return [
       ['node', [1], ['node:1']],
       ['node', [1, 2, 3], ['node:1', 'node:2', 'node:3']],
@@ -178,10 +186,9 @@ class CacheTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::buildTags
-   *
-   * @dataProvider buildTagsProvider
+   * Tests build tags.
    */
+  #[DataProvider('buildTagsProvider')]
   public function testBuildTags($prefix, array $suffixes, array $expected, $glue = ':'): void {
     $this->assertEquals($expected, Cache::buildTags($prefix, $suffixes, $glue));
   }

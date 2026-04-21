@@ -3,15 +3,14 @@
 namespace Drupal\history\Hook;
 
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Hook implementations for history.
  */
 class HistoryViewsHooks {
-  /**
-   * @file
-   * Provide views data for history.module.
-   */
+
+  use StringTranslationTrait;
 
   /**
    * Implements hook_views_data().
@@ -22,7 +21,7 @@ class HistoryViewsHooks {
     // We're actually defining a specific instance of the table, so let's
     // alias it so that we can later add the real table for other purposes if we
     // need it.
-    $data['history']['table']['group'] = t('Content');
+    $data['history']['table']['group'] = $this->t('Content');
     // Explain how this table joins to others.
     $data['history']['table']['join'] = [
           // Directly links to node table.
@@ -40,17 +39,37 @@ class HistoryViewsHooks {
       ],
     ];
     $data['history']['timestamp'] = [
-      'title' => t('Has new content'),
+      'title' => $this->t('Has new content'),
       'field' => [
         'id' => 'history_user_timestamp',
-        'help' => t('Show a marker if the content is new or updated.'),
+        'help' => $this->t('Show a marker if the content is new or updated.'),
       ],
       'filter' => [
-        'help' => t('Show only content that is new or updated.'),
+        'help' => $this->t('Show only content that is new or updated.'),
         'id' => 'history_user_timestamp',
       ],
     ];
     return $data;
+  }
+
+  /**
+   * Implements hook_views_data_alter().
+   */
+  #[Hook('views_data_alter')]
+  public function viewsDataAlter(&$data): void {
+    if (!\Drupal::moduleHandler()->moduleExists('comment')) {
+      return;
+    }
+    // New comments are only supported for node table because it requires the
+    // history table.
+    $data['node']['new_comments'] = [
+      'title' => $this->t('New comments'),
+      'help' => $this->t('The number of new comments on the node.'),
+      'field' => [
+        'id' => 'node_new_comments',
+        'no group by' => TRUE,
+      ],
+    ];
   }
 
 }

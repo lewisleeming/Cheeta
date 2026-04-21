@@ -21,9 +21,11 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
     'storage' => ContentEntityNullStorage::class,
   ],
   links: [
-    'add-form' => '/entity_test_no_id/add',
+    'add-form' => '/entity_test_no_id/add/{type}',
+    'add-page' => '/entity_test_no_id/add',
   ],
   admin_permission: 'administer entity_test content',
+  bundle_entity_type: 'entity_test_no_id_bundle',
   field_ui_base_route: 'entity.entity_test_no_id.admin_form',
 )]
 class EntityTestNoId extends EntityTest {

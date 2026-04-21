@@ -13,6 +13,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
 use Drupal\views\Plugin\views\PluginBase;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ViewExecutable;
 
 /**
@@ -89,7 +90,7 @@ use Drupal\views\ViewExecutable;
  *   Array of warning messages built by Analyzer::formatMessage to be displayed
  *   to the user following analysis of the view.
  */
-function hook_views_analyze(ViewExecutable $view) {
+function hook_views_analyze(ViewExecutable $view): array {
   $messages = [];
 
   if ($view->display_handler->options['pager']['type'] == 'none') {
@@ -317,7 +318,7 @@ function hook_views_data(): array {
       // ID of relationship handler plugin to use.
       'id' => 'standard',
       // Default label for relationship in the UI.
-      'label' => t('Example node'),
+      'title' => t('Example node'),
       // Description shown within the add relationship handler in the UI.
       'help' => t('Relationship between the node and node field data'),
     ],
@@ -396,7 +397,7 @@ function hook_views_data(): array {
       'id' => 'boolean',
       // Override the generic field title, so that the filter uses a different
       // label in the UI.
-      'label' => t('Published'),
+      'title' => t('Published'),
       // Override the default BooleanOperator filter handler's 'type' setting,
       // to display this as a "Yes/No" filter instead of a "True/False" filter.
       'type' => 'yes-no',
@@ -517,7 +518,7 @@ function hook_views_data_alter(array &$data) {
       'field' => 'fid',
       // ID of relationship handler plugin to use.
       'id' => 'standard',
-      'label' => t('Default label for relationship'),
+      'title' => t('Default label for relationship'),
       // Description shown within the add relationship handler in the UI.
       'help' => t('Description of the placeholder field relationship'),
     ],
@@ -532,11 +533,12 @@ function hook_views_data_alter(array &$data) {
  * When collecting the views data, views_views_data() invokes this hook for each
  * field storage definition, on the module that provides the field storage
  * definition. If the return value is empty, the result of
- * views_field_default_views_data() is used instead. Then the result is altered
- * by invoking hook_field_views_data_alter() on all modules.
+ * FieldViewsDataProvider::defaultFieldImplementation() is used instead. Then
+ * the result is altered by invoking hook_field_views_data_alter() on all
+ * modules.
  *
  * If no hook implementation exists, hook_views_data() falls back to
- * views_field_default_views_data().
+ * FieldViewsDataProvider::defaultFieldImplementation().
  *
  * @param \Drupal\field\FieldStorageConfigInterface $field_storage
  *   The field storage config entity.
@@ -550,14 +552,14 @@ function hook_views_data_alter(array &$data) {
  * @see hook_field_views_data_views_data_alter()
  */
 function hook_field_views_data(FieldStorageConfigInterface $field_storage): array {
-  $data = views_field_default_views_data($field_storage);
+  $data = \Drupal::service('views.field_data_provider')->defaultFieldImplementation($field_storage);
   foreach ($data as $table_name => $table_data) {
     // Add the relationship only on the target_id field.
     $data[$table_name][$field_storage->getName() . '_target_id']['relationship'] = [
       'id' => 'standard',
       'base' => 'file_managed',
       'base field' => 'target_id',
-      'label' => t('image from @field_name', ['@field_name' => $field_storage->getName()]),
+      'title' => t('image from @field_name', ['@field_name' => $field_storage->getName()]),
     ];
   }
 
@@ -569,8 +571,8 @@ function hook_field_views_data(FieldStorageConfigInterface $field_storage): arra
  *
  * This is called on all modules even if there is no hook_field_views_data()
  * implementation for the field, and therefore may be used to alter the
- * default data that views_field_default_views_data() supplies for the
- * field storage.
+ * default data that FieldViewsDataProvider::defaultFieldImplementation()
+ * supplies for the field storage.
  *
  * @param array $data
  *   The views data for the field storage. This has the same format as the
@@ -589,7 +591,7 @@ function hook_field_views_data_alter(array &$data, FieldStorageConfigInterface $
   $pseudo_field_name = 'reverse_' . $field_name . '_' . $entity_type_id;
   $table_mapping = \Drupal::entityTypeManager()->getStorage($entity_type_id)->getTableMapping();
 
-  [$label] = views_entity_field_label($entity_type_id, $field_name);
+  [$label] = \Drupal::service('entity_field.manager')->getFieldLabels($entity_type, $field_name);
 
   $data['file_managed'][$pseudo_field_name]['relationship'] = [
     'title' => t('@entity using @field', ['@entity' => $entity_type->getLabel(), '@field' => $label]),
@@ -644,7 +646,7 @@ function hook_field_views_data_views_data_alter(array &$data, FieldStorageConfig
   $entity_type_id = $field->getTargetEntityTypeId();
   $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
   $pseudo_field_name = 'reverse_' . $field_name . '_' . $entity_type_id;
-  [$label] = views_entity_field_label($entity_type_id, $field_name);
+  [$label] = \Drupal::service('entity_field.manager')->getFieldLabels($entity_type_id, $field_name);
   $table_mapping = \Drupal::entityTypeManager()->getStorage($entity_type_id)->getTableMapping();
 
   // Views data for this field is in $data[$data_key].
@@ -685,7 +687,7 @@ function hook_field_views_data_views_data_alter(array &$data, FieldStorageConfig
  *   surrounded with '***', as illustrated in the example implementation, to
  *   avoid collisions with other values in the query.
  */
-function hook_views_query_substitutions(ViewExecutable $view) {
+function hook_views_query_substitutions(ViewExecutable $view): array {
   // Example from views_views_query_substitutions().
   return [
     '***CURRENT_VERSION***' => \Drupal::VERSION,
@@ -726,7 +728,8 @@ function hook_views_form_substitutions() {
  */
 function hook_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
 
-  // Modify contextual filters for my_special_view if user has 'my special permission'.
+  // Modify contextual filters for my_special_view if user has
+  // 'my special permission'.
   $account = \Drupal::currentUser();
 
   if ($view->id() == 'my_special_view' && $account->hasPermission('my special permission') && $display_id == 'public_display') {
@@ -842,7 +845,7 @@ function hook_views_post_execute(ViewExecutable $view) {
  *
  * @see \Drupal\views\ViewExecutable
  */
-function hook_views_pre_render(ViewExecutable $view) {
+function hook_views_pre_render(ViewExecutable $view): void {
   // Scramble the order of the rows shown on this result page.
   // Note that this could be done earlier, but not later in the view execution
   // process.
@@ -880,7 +883,7 @@ function hook_views_pre_render(ViewExecutable $view) {
  *
  * @see \Drupal\views\ViewExecutable
  */
-function hook_views_post_render(ViewExecutable $view, array &$output, CachePluginBase $cache) {
+function hook_views_post_render(ViewExecutable $view, array &$output, CachePluginBase $cache): void {
   // When using full pager, disable any time-based caching if there are fewer
   // than 10 results.
   if ($view->pager instanceof Full && $cache instanceof Time && count($view->result) < 10) {
@@ -960,7 +963,7 @@ function hook_views_preview_info_alter(array &$rows, ViewExecutable $view) {
  *
  * @see views_invalidate_cache()
  */
-function hook_views_invalidate_cache() {
+function hook_views_invalidate_cache(): void {
   Cache::invalidateTags(['views']);
 }
 
@@ -1271,4 +1274,54 @@ function hook_views_plugins_sort_alter(array &$plugins) {
 
 /**
  * @} End of "addtogroup hooks".
+ */
+
+/**
+ * @defgroup views_templates Views template files
+ * @{
+ * Describes various views templates & overriding options.
+ *
+ * All views templates can be overridden with a variety of names, using
+ * the view, the display ID of the view, the display type of the view,
+ * or some combination thereof.
+ *
+ * For each view, there will be a minimum of two templates used. The first
+ * is used for all views: views-view.html.twig.
+ *
+ * The second template is determined by the style selected for the view. Note
+ * that certain aspects of the view can also change which style is used; for
+ * example, arguments which provide a summary view might change the style to
+ * one of the special summary styles.
+ *
+ * The default style for all views is views-view-unformatted.html.twig.
+ *
+ * Many styles will then farm out the actual display of each row to a row
+ * style; the default row style is views-view-fields.html.twig.
+ *
+ * Here is an example of all the templates that will be tried in the following
+ * case:
+ *
+ * View, named foobar. Style: unformatted. Row style: Fields. Display: Page.
+ *
+ * - views-view--foobar--page.html.twig
+ * - views-view--page.html.twig
+ * - views-view--foobar.html.twig
+ * - views-view.html.twig
+ *
+ * - views-view-unformatted--foobar--page.html.twig
+ * - views-view-unformatted--page.html.twig
+ * - views-view-unformatted--foobar.html.twig
+ * - views-view-unformatted.html.twig
+ *
+ * - views-view-fields--foobar--page.html.twig
+ * - views-view-fields--page.html.twig
+ * - views-view-fields--foobar.html.twig
+ * - views-view-fields.html.twig
+ *
+ * Important! When adding a new template to your theme, be sure to flush the
+ * theme registry cache!
+ *
+ * @ingroup views_overview
+ * @see \Drupal\views\ViewExecutable::buildThemeFunctions()
+ * @}
  */

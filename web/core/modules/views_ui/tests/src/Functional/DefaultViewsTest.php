@@ -7,12 +7,14 @@ namespace Drupal\Tests\views_ui\Functional;
 use Drupal\Core\Url;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests enabling, disabling, and reverting default views via the listing page.
- *
- * @group views_ui
  */
+#[Group('views_ui')]
+#[RunTestsInSeparateProcesses]
 class DefaultViewsTest extends UITestBase {
 
   /**
@@ -92,11 +94,12 @@ class DefaultViewsTest extends UITestBase {
     // $this->assertSession()->linkExists('Revert');
     // $this->assertSession()->linkByHrefExists($revert_href);
     // $this->drupalGet($revert_href);
-    // $this->submitForm(array(), 'Revert');
+    // $this->submitForm([], 'Revert');
     // $this->drupalGet('glossary');
     // $this->assertSession()->pageTextNotContains($new_title);
 
-    // Duplicate the view and check that the normal schema of duplicated views is used.
+    // Duplicate the view and check that the normal schema of duplicated views
+    // is used.
     $this->drupalGet('admin/structure/views');
     $this->clickViewsOperationLink('Duplicate', '/glossary');
     $edit = [

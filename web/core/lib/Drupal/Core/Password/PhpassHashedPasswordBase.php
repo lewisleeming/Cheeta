@@ -33,7 +33,7 @@ abstract class PhpassHashedPasswordBase implements PasswordInterface {
    *
    * @var string
    */
-  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName, Drupal.Commenting.VariableComment.Missing
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public static $ITOA64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
   /**
@@ -221,11 +221,8 @@ abstract class PhpassHashedPasswordBase implements PasswordInterface {
         break;
 
       default:
-        if (isset($this->corePassword)) {
-          return $this->corePassword->check($password, $stored_hash);
-        }
+        return $this->corePassword->check($password, $stored_hash);
 
-        return FALSE;
     }
 
     // Compare using hash_equals() instead of === to mitigate timing attacks.

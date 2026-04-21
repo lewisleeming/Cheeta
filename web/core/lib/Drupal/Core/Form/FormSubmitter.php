@@ -3,11 +3,12 @@
 namespace Drupal\Core\Form;
 
 use Drupal\Core\EventSubscriber\RedirectResponseSubscriber;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\CallableResolver;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\Core\Routing\UrlGeneratorInterface;
 
 /**
  * Provides submission processing for forms.
@@ -15,20 +16,21 @@ use Drupal\Core\Routing\UrlGeneratorInterface;
 class FormSubmitter implements FormSubmitterInterface {
 
   /**
-   * Constructs a new FormSubmitter.
-   *
-   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
-   *   The request stack.
-   * @param \Drupal\Core\Routing\UrlGeneratorInterface $urlGenerator
-   *   The URL generator.
-   * @param \Drupal\Core\EventSubscriber\RedirectResponseSubscriber $redirectResponseSubscriber
-   *   The redirect response subscriber.
+   * The callable resolver.
    */
+  protected CallableResolver $callableResolver;
+
   public function __construct(
     protected RequestStack $requestStack,
     protected UrlGeneratorInterface $urlGenerator,
     protected RedirectResponseSubscriber $redirectResponseSubscriber,
+    ?CallableResolver $callableResolver = NULL,
   ) {
+    if (!$callableResolver) {
+      @trigger_error(sprintf('Calling %s() without the $callableResolver param is deprecated in drupal:11.3.0 and is required in drupal:12.0.0. See https://www.drupal.org/node/3548821', __METHOD__), E_USER_DEPRECATED);
+      $callableResolver = \Drupal::service(CallableResolver::class);
+    }
+    $this->callableResolver = $callableResolver;
   }
 
   /**
@@ -102,7 +104,8 @@ class FormSubmitter implements FormSubmitterInterface {
         $batch['has_form_submits'] = TRUE;
       }
       else {
-        call_user_func_array($form_state->prepareCallback($callback), [&$form, &$form_state]);
+        $callable = $this->callableResolver->getCallableFromDefinition($form_state->prepareCallback($callback));
+        $callable($form, $form_state);
       }
     }
   }
@@ -128,12 +131,15 @@ class FormSubmitter implements FormSubmitterInterface {
     // If no redirect was specified, redirect to the current path.
     elseif ($redirect === NULL) {
       $request = $this->requestStack->getCurrentRequest();
-      $url = $this->urlGenerator->generateFromRoute('<current>', [], ['query' => $request->query->all(), 'absolute' => TRUE]);
+      $url = $this->urlGenerator->generateFromRoute('<current>', [], [
+        'query' => $request->query->all(),
+        'absolute' => TRUE,
+      ]);
     }
 
     if ($url) {
-      // According to RFC 7231, 303 See Other status code must be used to redirect
-      // user agent (and not default 302 Found).
+      // According to RFC 7231, 303 See Other status code must be used to
+      // redirect user agent (and not default 302 Found).
       // @see http://tools.ietf.org/html/rfc7231#section-6.4.4
       return new RedirectResponse($url, Response::HTTP_SEE_OTHER);
     }

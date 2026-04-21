@@ -4,17 +4,28 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\package_manager\Kernel;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\fixture_manipulator\ActiveFixtureManipulator;
 use Drupal\package_manager\Event\PreApplyEvent;
 use Drupal\package_manager\Event\PreCreateEvent;
 use Drupal\package_manager\ValidationResult;
+use Drupal\package_manager\Validator\ComposerValidator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @covers \Drupal\package_manager\Validator\ComposerValidator
- * @group package_manager
+ * Tests Composer Validator.
+ *
  * @internal
  */
+#[Group('package_manager')]
+#[CoversClass(ComposerValidator::class)]
+#[RunTestsInSeparateProcesses]
 class ComposerValidatorTest extends PackageManagerKernelTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * Data provider for testComposerSettingsValidation().
@@ -94,9 +105,8 @@ class ComposerValidatorTest extends PackageManagerKernelTestBase {
    *   The config to set.
    * @param \Drupal\package_manager\ValidationResult[] $expected_results
    *   The expected validation results, if any.
-   *
-   * @dataProvider providerComposerSettingsValidation
    */
+  #[DataProvider('providerComposerSettingsValidation')]
   public function testComposerSettingsValidation(array $config, array $expected_results): void {
     (new ActiveFixtureManipulator())->addConfig($config)->commitChanges()->updateLock();
     $this->assertStatusCheckResults($expected_results);
@@ -110,9 +120,8 @@ class ComposerValidatorTest extends PackageManagerKernelTestBase {
    *   The config to set.
    * @param \Drupal\package_manager\ValidationResult[] $expected_results
    *   The expected validation results, if any.
-   *
-   * @dataProvider providerComposerSettingsValidation
    */
+  #[DataProvider('providerComposerSettingsValidation')]
   public function testComposerSettingsValidationDuringPreApply(array $config, array $expected_results): void {
     $this->getStageFixtureManipulator()->addConfig($config, TRUE);
     $this->assertResults($expected_results, PreApplyEvent::class);
@@ -149,14 +158,13 @@ class ComposerValidatorTest extends PackageManagerKernelTestBase {
    *   The Composer configuration to set.
    * @param \Drupal\Core\StringTranslation\TranslatableMarkup[] $expected_messages
    *   The expected validation error messages.
-   *
-   * @dataProvider providerLinkToOnlineHelp
    */
+  #[DataProvider('providerLinkToOnlineHelp')]
   public function testLinkToOnlineHelp(array $config, array $expected_messages): void {
     $this->enableModules(['help']);
     (new ActiveFixtureManipulator())->addConfig($config)->commitChanges();
 
-    $result = ValidationResult::createError($expected_messages, t("Composer settings don't satisfy Package Manager's requirements."));
+    $result = ValidationResult::createError($expected_messages, $this->t("Composer settings don't satisfy Package Manager's requirements."));
     $this->assertStatusCheckResults([$result]);
   }
 

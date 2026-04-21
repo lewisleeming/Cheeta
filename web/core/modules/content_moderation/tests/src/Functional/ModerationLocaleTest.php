@@ -6,13 +6,15 @@ namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\node\NodeInterface;
 use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Test content_moderation functionality with localization and translation.
- *
- * @group content_moderation
- * @group #slow
  */
+#[Group('content_moderation')]
+#[Group('#slow')]
+#[RunTestsInSeparateProcesses]
 class ModerationLocaleTest extends ModerationStateTestBase {
 
   use ContentTranslationTestTrait;
@@ -351,11 +353,11 @@ class ModerationLocaleTest extends ModerationStateTestBase {
     foreach (range(11, 16) as $revision_id) {
       /** @var \Drupal\node\NodeInterface $revision */
       $revision = $storage->loadRevision($revision_id);
-      foreach ($revision->getTranslationLanguages() as $langcode => $language) {
+      foreach (array_keys($revision->getTranslationLanguages()) as $langcode) {
         if ($revision->isRevisionTranslationAffected()) {
-          $this->drupalGet($revision->toUrl('revision'));
+          $translation = $revision->getTranslation($langcode);
+          $this->drupalGet($translation->toUrl('revision'));
           $this->assertFalse($this->hasModerationForm(), 'Moderation form is not displayed correctly for revision ' . $revision_id);
-          break;
         }
       }
     }

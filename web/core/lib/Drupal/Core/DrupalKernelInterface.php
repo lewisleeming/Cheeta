@@ -98,6 +98,7 @@ interface DrupalKernelInterface extends HttpKernelInterface {
    * Gets the app root.
    *
    * @return string
+   *   The path of the application root.
    */
   public function getAppRoot();
 
@@ -115,9 +116,21 @@ interface DrupalKernelInterface extends HttpKernelInterface {
   public function updateModules(array $module_list, array $module_filenames = []);
 
   /**
+   * Updates the kernel's list of themes to the new list.
+   *
+   * The kernel needs to update its list and container to match the new
+   * list.
+   *
+   * array<string, \Drupal\Core\Extension\Extension> $register_themes
+   *   List of theme extensions, keyed by theme name.
+   */
+  public function updateThemes(array $register_themes = []): void;
+
+  /**
    * Force a container rebuild.
    *
    * @return \Symfony\Component\DependencyInjection\ContainerInterface
+   *   The rebuilt Symfony container.
    */
   public function rebuildContainer();
 
@@ -125,6 +138,7 @@ interface DrupalKernelInterface extends HttpKernelInterface {
    * Force a container reset.
    *
    * @return \Symfony\Component\DependencyInjection\ContainerInterface
+   *   The Symfony container.
    */
   public function resetContainer(): ContainerInterface;
 

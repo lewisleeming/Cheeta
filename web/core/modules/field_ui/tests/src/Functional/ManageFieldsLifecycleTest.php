@@ -7,12 +7,14 @@ namespace Drupal\Tests\field_ui\Functional;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Field UI "Manage fields" screen.
- *
- * @group field_ui
  */
+#[Group('field_ui')]
+#[RunTestsInSeparateProcesses]
 class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
 
   /**
@@ -42,7 +44,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
     $type = empty($type) ? $this->contentType : $type;
     $this->drupalGet('admin/structure/types/manage/' . $type . '/fields');
     // Check all table columns.
-    $table_headers = ['Label', 'Machine name', 'Field type', 'Operations'];
+    $table_headers = ['Field', 'Field type', 'Operations'];
     foreach ($table_headers as $table_header) {
       // We check that the label appear in the table headings.
       $this->assertSession()->responseContains($table_header . '</th>');
@@ -174,7 +176,12 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
     $this->assertSession()->pageTextContains("There is 1 entity with 2 or more values in this field");
 
     // Create a second entity with three values.
-    $edit = ['title[0][value]' => 'Cardinality 3', 'body[0][value]' => 'Body 1', 'body[1][value]' => 'Body 2', 'body[2][value]' => 'Body 3'];
+    $edit = [
+      'title[0][value]' => 'Cardinality 3',
+      'body[0][value]' => 'Body 1',
+      'body[1][value]' => 'Body 2',
+      'body[2][value]' => 'Body 3',
+    ];
     $this->drupalGet('node/add/article');
     $this->submitForm($edit, 'Save');
 
@@ -217,7 +224,8 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
 
     // Test the cardinality validation is not access sensitive.
 
-    // Remove the cardinality limit 4 so we can add a node the user doesn't have access to.
+    // Remove the cardinality limit 4 so we can add a node the user doesn't have
+    // access to.
     $edit = [
       'field_storage[subform][cardinality]' => (string) FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
     ];
@@ -291,7 +299,7 @@ class ManageFieldsLifecycleTest extends ManageFieldsFunctionalTestBase {
     $this->assertSession()->pageTextContains('Re-use an existing field');
 
     // Ensure that we test with a label that contains HTML.
-    $label = $this->randomString(4) . '<br/>' . $this->randomString(4);
+    $label = $this->randomMachineName(4) . '<br/>' . $this->randomMachineName(4);
     // Add a new field for the orphaned storage.
     $this->fieldUIAddExistingField("admin/structure/types/manage/page", $this->fieldName, $label);
   }

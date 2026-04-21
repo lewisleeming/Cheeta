@@ -8,7 +8,10 @@ use Drupal\Core\Entity\EditorialContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Url;
+use Drupal\link\AttributeXss;
 use Drupal\link\LinkItemInterface;
+use Drupal\link\LinkTitleVisibility;
 use Drupal\menu_link_content\Form\MenuLinkContentDeleteForm;
 use Drupal\menu_link_content\Form\MenuLinkContentForm;
 use Drupal\menu_link_content\MenuLinkContentAccessControlHandler;
@@ -46,6 +49,7 @@ use Drupal\menu_link_content\MenuLinkListBuilder;
       'default' => MenuLinkContentForm::class,
       'delete' => MenuLinkContentDeleteForm::class,
     ],
+    'link_target' => ['view' => MenuLinkContentLinkTarget::class],
     'list_builder' => MenuLinkListBuilder::class,
   ],
   links: [
@@ -99,7 +103,12 @@ class MenuLinkContent extends EditorialContentEntityBase implements MenuLinkCont
    * {@inheritdoc}
    */
   public function getUrlObject() {
-    return $this->link->first()->getUrl();
+    $url = $this->link->first()->getUrl();
+    assert($url instanceof Url);
+    if ($attributes = $url->getOption('attributes')) {
+      $url->setOption('attributes', AttributeXss::sanitizeAttributes($attributes));
+    }
+    return $url;
   }
 
   /**
@@ -336,7 +345,7 @@ class MenuLinkContent extends EditorialContentEntityBase implements MenuLinkCont
       ->setRequired(TRUE)
       ->setSettings([
         'link_type' => LinkItemInterface::LINK_GENERIC,
-        'title' => DRUPAL_DISABLED,
+        'title' => LinkTitleVisibility::Disabled->value,
       ])
       ->setDisplayOptions('form', [
         'type' => 'link_default',

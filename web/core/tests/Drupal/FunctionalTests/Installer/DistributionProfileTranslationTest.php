@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Serialization\Yaml;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests distribution profile support.
  *
- * @group Installer
- *
  * @see \Drupal\FunctionalTests\Installer\DistributionProfileTest
  */
+#[Group('Installer')]
+#[RunTestsInSeparateProcesses]
 class DistributionProfileTranslationTest extends InstallerTestBase {
 
   /**
@@ -110,7 +112,8 @@ class DistributionProfileTranslationTest extends InstallerTestBase {
 
     // Verify German was configured but not English.
     $this->drupalGet('admin/config/regional/language');
-    $this->assertSession()->pageTextContains('German');
+    // cspell:ignore deutsch
+    $this->assertSession()->pageTextContains('Deutsch');
     $this->assertSession()->pageTextNotContains('English');
   }
 

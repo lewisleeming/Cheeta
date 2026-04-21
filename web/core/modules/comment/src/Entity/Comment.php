@@ -72,7 +72,6 @@ use Drupal\user\EntityOwnerTrait;
     'singular' => '@count comment',
     'plural' => '@count comments',
   ],
-  uri_callback: 'comment_uri',
   field_ui_base_route: 'entity.comment_type.edit_form',
   constraints: [
     'CommentName' => [],
@@ -115,7 +114,7 @@ class Comment extends ContentEntityBase implements CommentInterface {
           $max = rtrim((string) $max, '/');
           // We need to get the value at the correct depth.
           $parts = explode('.', $max);
-          $n = Number::alphadecimalToInt($parts[0]);
+          $n = $parts[0] ? Number::alphadecimalToInt($parts[0]) : 0;
           $prefix = '';
         }
         else {

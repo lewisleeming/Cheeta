@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\system\Kernel\Theme;
 
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests low-level theme functions.
- *
- * @group Theme
  */
+#[Group('Theme')]
+#[RunTestsInSeparateProcesses]
 class ThemeTest extends KernelTestBase {
 
   /**
@@ -30,12 +32,11 @@ class ThemeTest extends KernelTestBase {
   /**
    * Tests attribute merging.
    *
-   * Render arrays that use a render element and templates (and hence call
-   * template_preprocess()) must ensure the attributes at different occasions
-   * are all merged correctly:
+   * Drupal/Core/Theme/ThemeManagerInterface::addDefaultTemplateVariables())
+   * must ensure the attributes at different occasions are all merged correctly:
    *   - $variables['attributes'] as passed in to the theme hook implementation.
    *   - the render element's #attributes
-   *   - any attributes set in the template's preprocessing function
+   *   - any attributes set in the template's preprocessing function.
    */
   public function testAttributeMerging(): void {
     $theme_test_render_element = [
@@ -68,8 +69,8 @@ class ThemeTest extends KernelTestBase {
       }
     }
 
-    // suggestion_not_implemented is not an implemented theme hook so \Drupal::theme() service
-    // should return FALSE instead of a string.
+    // suggestion_not_implemented is not an implemented theme hook so
+    // \Drupal::theme() service should return FALSE instead of a string.
     $output = \Drupal::theme()->render(['suggestion_not_implemented'], []);
     $this->assertFalse($output, '\Drupal::theme() returns FALSE when a hook suggestion is not implemented.');
   }

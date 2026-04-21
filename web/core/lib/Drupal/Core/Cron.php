@@ -38,7 +38,7 @@ class Cron implements CronInterface {
    * Constructs a cron object.
    *
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
-   *   The module handler
+   *   The module handler.
    * @param \Drupal\Core\Lock\LockBackendInterface $lock
    *   The lock service.
    * @param \Drupal\Core\Queue\QueueFactory $queueFactory
@@ -107,7 +107,7 @@ class Cron implements CronInterface {
       // Add watchdog message.
       $this->logger->info('Cron run completed.');
 
-      // Return TRUE so other functions can check if it did run successfully
+      // Return TRUE so other functions can check if it did run successfully.
       $return = TRUE;
     }
 

@@ -4,24 +4,50 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\package_manager\Kernel;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\fixture_manipulator\ActiveFixtureManipulator;
 use Drupal\package_manager\Event\PreCreateEvent;
-use Drupal\package_manager\Exception\StageEventException;
+use Drupal\package_manager\Exception\SandboxEventException;
 use Drupal\package_manager\ValidationResult;
+use Drupal\package_manager\Validator\ComposerPatchesValidator;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @covers \Drupal\package_manager\Validator\ComposerPatchesValidator
- * @group package_manager
+ * Tests Composer Patches Validator.
+ *
  * @internal
  */
+#[Group('package_manager')]
+#[Group('#slow')]
+#[CoversClass(ComposerPatchesValidator::class)]
+#[RunTestsInSeparateProcesses]
 class ComposerPatchesValidatorTest extends PackageManagerKernelTestBase {
+
+  use StringTranslationTrait;
 
   const ABSENT = 0;
   const CONFIG_ALLOWED_PLUGIN = 1;
   const EXTRA_EXIT_ON_PATCH_FAILURE = 2;
   const REQUIRE_PACKAGE_FROM_ROOT = 4;
   const REQUIRE_PACKAGE_INDIRECTLY = 8;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    // The composer-patches plugin is not allowed by default.
+    $this->config('package_manager.settings')
+      ->set('additional_trusted_composer_plugins', [
+        'cweagans/composer-patches',
+      ])
+      ->save();
+  }
 
   /**
    * Data provider for testErrorDuringPreCreate().
@@ -70,9 +96,8 @@ class ComposerPatchesValidatorTest extends PackageManagerKernelTestBase {
    *   What aspects of the patcher are installed how.
    * @param \Drupal\package_manager\ValidationResult[] $expected_results
    *   The expected validation results.
-   *
-   *  @dataProvider providerErrorDuringPreCreate
    */
+  #[DataProvider('providerErrorDuringPreCreate')]
   public function testErrorDuringPreCreate(int $options, array $expected_results): void {
     $active_manipulator = new ActiveFixtureManipulator();
     if ($options & static::CONFIG_ALLOWED_PLUGIN) {
@@ -187,9 +212,8 @@ class ComposerPatchesValidatorTest extends PackageManagerKernelTestBase {
    *   Whether patcher is installed in stage.
    * @param \Drupal\package_manager\ValidationResult[] $expected_results
    *   The expected validation results.
-   *
-   * @dataProvider providerErrorDuringPreApply
    */
+  #[DataProvider('providerErrorDuringPreApply')]
   public function testErrorDuringPreApply(int $in_active, int $in_stage, array $expected_results): void {
     // Simulate in active.
     $active_manipulator = new ActiveFixtureManipulator();
@@ -238,7 +262,7 @@ class ComposerPatchesValidatorTest extends PackageManagerKernelTestBase {
 
     $stage = $this->createStage();
     $stage->create();
-    $stage_dir = $stage->getStageDirectory();
+    $stage_dir = $stage->getSandboxDirectory();
     $stage->require(['drupal/core:9.8.1']);
 
     try {
@@ -246,7 +270,7 @@ class ComposerPatchesValidatorTest extends PackageManagerKernelTestBase {
       // If we didn't get an exception, ensure we didn't expect any errors.
       $this->assertSame([], $expected_results);
     }
-    catch (StageEventException $e) {
+    catch (SandboxEventException $e) {
       $this->assertNotEmpty($expected_results);
       $this->assertValidationResultsEqual($expected_results, $e->event->getResults(), NULL, $stage_dir);
     }
@@ -265,9 +289,8 @@ class ComposerPatchesValidatorTest extends PackageManagerKernelTestBase {
    *   An associative array of fragments (anchors) in the online help. The keys
    *   should be the numeric indices of the validation result messages which
    *   should link to those fragments.
-   *
-   * @dataProvider providerErrorDuringPreApply
    */
+  #[DataProvider('providerErrorDuringPreApply')]
   public function testErrorDuringPreApplyWithHelp(int $in_active, int $in_stage, array $expected_results, array $help_page_sections): void {
     $this->enableModules(['help']);
 
@@ -282,7 +305,12 @@ class ComposerPatchesValidatorTest extends PackageManagerKernelTestBase {
             ->toString();
           // Reformat the provided results so that they all have the link to the
           // online documentation appended to them.
-          $messages[$message_index] = t('@message See <a href=":url">the help page</a> for information on how to resolve the problem.', ['@message' => $message, ':url' => $url]);
+          $messages[$message_index] = $this->t(
+            '@message See <a href=":url">the help page</a> for information on how to resolve the problem.',
+            [
+              '@message' => $message,
+              ':url' => $url,
+            ]);
         }
       }
       $expected_results[$result_index] = ValidationResult::createError($messages, $result->summary);

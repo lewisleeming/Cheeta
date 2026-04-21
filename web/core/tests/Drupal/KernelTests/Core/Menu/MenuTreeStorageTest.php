@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace Drupal\KernelTests\Core\Menu;
 
 use Drupal\Component\Plugin\Exception\PluginException;
+use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\Core\Menu\MenuTreeStorage;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore mlid
-
 /**
  * Tests the menu tree storage.
  *
- * @group Menu
- *
  * @see \Drupal\Core\Menu\MenuTreeStorage
  */
+#[Group('Menu')]
+#[RunTestsInSeparateProcesses]
 class MenuTreeStorageTest extends KernelTestBase {
 
   /**
@@ -147,12 +149,37 @@ class MenuTreeStorageTest extends KernelTestBase {
     // ---- test2
     // ---- test6
 
-    $this->assertMenuLink('test1', ['has_children' => 1, 'depth' => 1], [], ['test4', 'test5', 'test2', 'test3', 'test6']);
-    $this->assertMenuLink('test2', ['has_children' => 0, 'depth' => 4], ['test5', 'test4', 'test1']);
-    $this->assertMenuLink('test3', ['has_children' => 0, 'depth' => 2], ['test1']);
-    $this->assertMenuLink('test4', ['has_children' => 1, 'depth' => 2], ['test1'], ['test2', 'test5', 'test6']);
-    $this->assertMenuLink('test5', ['has_children' => 1, 'depth' => 3], ['test4', 'test1'], ['test2', 'test6']);
-    $this->assertMenuLink('test6', ['has_children' => 0, 'depth' => 4], ['test5', 'test4', 'test1']);
+    $this->assertMenuLink(
+      'test1',
+      ['has_children' => 1, 'depth' => 1],
+      [],
+      ['test4', 'test5', 'test2', 'test3', 'test6']
+    );
+    $this->assertMenuLink(
+      'test2',
+      ['has_children' => 0, 'depth' => 4],
+      ['test5', 'test4', 'test1']
+    );
+    $this->assertMenuLink(
+      'test3',
+      ['has_children' => 0, 'depth' => 2],
+      ['test1']
+    );
+    $this->assertMenuLink(
+      'test4',
+      ['has_children' => 1, 'depth' => 2],
+      ['test1'], ['test2', 'test5', 'test6']
+    );
+    $this->assertMenuLink(
+      'test5',
+      ['has_children' => 1, 'depth' => 3],
+      ['test4', 'test1'], ['test2', 'test6']
+    );
+    $this->assertMenuLink(
+      'test6',
+      ['has_children' => 0, 'depth' => 4],
+      ['test5', 'test4', 'test1']
+    );
 
     // Deleting a link in the middle should re-attach child links to the parent.
     $this->treeStorage->delete('test4');
@@ -409,7 +436,7 @@ class MenuTreeStorageTest extends KernelTestBase {
    * Tests that a link's stored representation matches the expected values.
    *
    * @param string $id
-   *   The ID of the menu link to test
+   *   The ID of the menu link to test.
    * @param array $expected_properties
    *   A keyed array of column names and values like has_children and depth.
    * @param array $parents
@@ -426,7 +453,7 @@ class MenuTreeStorageTest extends KernelTestBase {
     foreach ($expected_properties as $field => $value) {
       $query->condition($field, $value);
     }
-    $all = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
+    $all = $query->execute()->fetchAll(FetchAs::Associative);
     $this->assertCount(1, $all, "Found link $id matching all the expected properties");
     $raw = reset($all);
 

@@ -4,71 +4,81 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\package_manager\Unit;
 
-use Drupal\package_manager\ValidationResult;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\system\SystemManager;
+use Drupal\package_manager\ValidationResult;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\TestWith;
 
 /**
- * @coversDefaultClass \Drupal\package_manager\ValidationResult
- * @group package_manager
+ * Tests Drupal\package_manager\ValidationResult.
+ *
  * @internal
  */
+#[CoversClass(ValidationResult::class)]
+#[Group('package_manager')]
 class ValidationResultTest extends UnitTestCase {
 
   /**
-   * @covers ::createWarning
-   *
-   * @dataProvider providerValidConstructorArguments
+   * Tests create warning result.
    */
+  #[DataProvider('providerValidConstructorArguments')]
   public function testCreateWarningResult(array $messages, ?string $summary): void {
+    // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString, DrupalPractice.Objects.GlobalFunction
     $summary = $summary ? t($summary) : NULL;
     $result = ValidationResult::createWarning($messages, $summary);
-    $this->assertResultValid($result, $messages, $summary, SystemManager::REQUIREMENT_WARNING);
+    $this->assertResultValid($result, $messages, $summary, RequirementSeverity::Warning->value);
   }
 
   /**
-   * @covers ::getOverallSeverity
+   * Tests overall severity.
+   *
+   * @legacy-covers ::getOverallSeverity
    */
   public function testOverallSeverity(): void {
     // An error and a warning should be counted as an error.
     $results = [
+      // phpcs:disable DrupalPractice.Objects.GlobalFunction
       ValidationResult::createError([t('Boo!')]),
       ValidationResult::createWarning([t('Moo!')]),
+      // phpcs:enable DrupalPractice.Objects.GlobalFunction
     ];
-    $this->assertSame(SystemManager::REQUIREMENT_ERROR, ValidationResult::getOverallSeverity($results));
+    $this->assertSame(RequirementSeverity::Error->value, ValidationResult::getOverallSeverity($results));
 
     // If there are no results, but no errors, the results should be counted as
     // a warning.
     array_shift($results);
-    $this->assertSame(SystemManager::REQUIREMENT_WARNING, ValidationResult::getOverallSeverity($results));
+    $this->assertSame(RequirementSeverity::Warning->value, ValidationResult::getOverallSeverity($results));
 
-    // If there are just plain no results, we should get REQUIREMENT_OK.
+    // If there are just plain no results, we should get
+    // RequirementSeverity::OK.
     array_shift($results);
-    $this->assertSame(SystemManager::REQUIREMENT_OK, ValidationResult::getOverallSeverity($results));
+    $this->assertSame(RequirementSeverity::OK->value, ValidationResult::getOverallSeverity($results));
   }
 
   /**
-   * @covers ::createError
-   *
-   * @dataProvider providerValidConstructorArguments
+   * Tests create error result.
    */
+  #[DataProvider('providerValidConstructorArguments')]
   public function testCreateErrorResult(array $messages, ?string $summary): void {
+    // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString, DrupalPractice.Objects.GlobalFunction
     $summary = $summary ? t($summary) : NULL;
     $result = ValidationResult::createError($messages, $summary);
-    $this->assertResultValid($result, $messages, $summary, SystemManager::REQUIREMENT_ERROR);
+    $this->assertResultValid($result, $messages, $summary, RequirementSeverity::Error->value);
   }
 
   /**
-   * @covers ::createWarning
+   * Tests create warning result exception.
    *
-   * @param string[] $messages
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup[] $messages
    *   The warning messages of the validation result.
    * @param string $expected_exception_message
    *   The expected exception message.
-   *
-   * @dataProvider providerCreateExceptions
    */
+  #[DataProvider('providerCreateExceptions')]
   public function testCreateWarningResultException(array $messages, string $expected_exception_message): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage($expected_exception_message);
@@ -76,15 +86,14 @@ class ValidationResultTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::createError
+   * Tests create error result exception.
    *
-   * @param string[] $messages
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup[] $messages
    *   The error messages of the validation result.
    * @param string $expected_exception_message
    *   The expected exception message.
-   *
-   * @dataProvider providerCreateExceptions
    */
+  #[DataProvider('providerCreateExceptions')]
   public function testCreateErrorResultException(array $messages, string $expected_exception_message): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage($expected_exception_message);
@@ -93,10 +102,9 @@ class ValidationResultTest extends UnitTestCase {
 
   /**
    * Tests that the messages are asserted to be translatable.
-   *
-   * @testWith ["createError"]
-   *   ["createWarning"]
    */
+  #[TestWith(["createError"])]
+  #[TestWith(["createWarning"])]
   public function testMessagesMustBeTranslatable(string $method): void {
     // When creating an error from a throwable, the message does not need to be
     // translatable.

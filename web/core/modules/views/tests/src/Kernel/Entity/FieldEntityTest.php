@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\views\Kernel\Entity;
 
+use Drupal\comment\Entity\Comment;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
-use Drupal\user\Entity\User;
+use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
+use Drupal\user\Entity\User;
 use Drupal\views\Tests\ViewTestData;
 use Drupal\views\Views;
-use Drupal\comment\Entity\Comment;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the field plugin base integration with the entity system.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FieldEntityTest extends ViewsKernelTestBase {
 
   use CommentTestTrait;
@@ -48,12 +50,12 @@ class FieldEntityTest extends ViewsKernelTestBase {
   protected function setUp($import_test_views = TRUE, $modules = ['views_test_config']): void {
     parent::setUp(FALSE);
 
-    $this->installConfig(['node', 'comment']);
     $this->installEntitySchema('node');
-    $this->installSchema('node', ['node_access']);
     $this->installEntitySchema('comment');
     $this->installEntitySchema('user');
+    $this->installSchema('node', ['node_access']);
     $this->installSchema('comment', ['comment_entity_statistics']);
+    $this->installConfig(['node', 'comment']);
     $this->createContentType(['type' => 'page']);
     $this->addDefaultCommentField('node', 'page');
 

@@ -8,14 +8,15 @@ use Drupal\FunctionalTests\Update\UpdatePathTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\system\Entity\Action;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 // cspell:ignore hola testblock usuario
-
 /**
  * Runs UpdatePathTestBase with a dump filled with content.
- *
- * @group Update
  */
+#[Group('Update')]
+#[RunTestsInSeparateProcesses]
 class UpdatePathTestBaseFilledTest extends UpdatePathTestBase {
 
   /**
@@ -302,10 +303,6 @@ class UpdatePathTestBaseFilledTest extends UpdatePathTestBase {
     $action = Action::load('test_action');
     $this->assertEquals('Test action', $action->label());
 
-    // Make sure our ban still exists.
-    $this->drupalGet('admin/config/people/ban');
-    $this->assertSession()->pageTextContains('8.8.8.8');
-
     // Make sure our vocabulary exists.
     $this->drupalGet('admin/structure/taxonomy/manage/test_vocabulary/overview');
 
@@ -331,7 +328,6 @@ class UpdatePathTestBaseFilledTest extends UpdatePathTestBase {
 
     // Make sure our modules are still enabled.
     $expected_enabled_modules = [
-      'ban',
       'basic_auth',
       'block',
       'block_content',

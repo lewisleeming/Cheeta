@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\views\Kernel\Plugin;
 
-use Drupal\views\Views;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
+use Drupal\views\Views;
 use Drupal\views_test_data\Plugin\views\query\QueryTest as QueryTestPlugin;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests query plugins.
- *
- * @group views
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class QueryTest extends ViewsKernelTestBase {
 
   /**
@@ -22,6 +24,9 @@ class QueryTest extends ViewsKernelTestBase {
    */
   public static $testViews = ['test_view'];
 
+  /**
+   * Provides Views metadata for the test data table.
+   */
   protected function viewsData() {
     $data = parent::viewsData();
     $data['views_test_data']['table']['base']['query_id'] = 'query_test';
@@ -49,6 +54,9 @@ class QueryTest extends ViewsKernelTestBase {
     $this->assertInstanceOf(QueryTestPlugin::class, $view->query);
   }
 
+  /**
+   * Executes the views query, ensures it's not empty.
+   */
   public function _testQueryExecute(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();

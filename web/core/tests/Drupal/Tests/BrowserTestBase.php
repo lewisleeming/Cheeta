@@ -13,6 +13,8 @@ use Behat\Mink\Session;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Test\FunctionalTestSetupTrait;
 use Drupal\Core\Test\TestSetupTrait;
 use Drupal\Core\Utility\Error;
@@ -22,8 +24,9 @@ use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\TestTools\Comparator\MarkupInterfaceComparator;
 use Drupal\TestTools\Extension\DeprecationBridge\ExpectDeprecationTrait;
-use Drupal\TestTools\TestVarDumper;
+use Drupal\TestTools\Extension\Dump\DebugDump;
 use GuzzleHttp\Cookie\CookieJar;
+use PHPUnit\Framework\Attributes\BeforeClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\VarDumper\VarDumper;
 
@@ -85,14 +88,6 @@ abstract class BrowserTestBase extends TestCase {
    */
   protected $timeLimit = 500;
 
-  /**
-   * The translation file directory for the test environment.
-   *
-   * This is set in BrowserTestBase::prepareEnvironment().
-   *
-   * @var string
-   */
-  protected $translationFilesDirectory;
 
   /**
    * The config importer that can be used in a test.
@@ -129,15 +124,6 @@ abstract class BrowserTestBase extends TestCase {
    * @var string
    */
   protected $defaultTheme;
-
-  /**
-   * An array of custom translations suitable for SettingsEditor::rewrite().
-   *
-   * @var array
-   *
-   * @see \Drupal\Core\Site\SettingsEditor::rewrite()
-   */
-  protected $customTranslations;
 
   /**
    * Mink class for the default driver to use.
@@ -189,16 +175,6 @@ abstract class BrowserTestBase extends TestCase {
   protected $originalShutdownCallbacks = [];
 
   /**
-   * The original container.
-   *
-   * Move this to \Drupal\Core\Test\FunctionalTestSetupTrait once TestBase no
-   * longer provides the same value.
-   *
-   * @var \Symfony\Component\DependencyInjection\ContainerInterface
-   */
-  protected $originalContainer;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(string $name) {
@@ -207,11 +183,13 @@ abstract class BrowserTestBase extends TestCase {
   }
 
   /**
-   * {@inheritdoc}
+   * Registers the dumper CLI handler when the DebugDump extension is enabled.
    */
-  public static function setUpBeforeClass(): void {
-    parent::setUpBeforeClass();
-    VarDumper::setHandler(TestVarDumper::class . '::cliHandler');
+  #[BeforeClass]
+  public static function setDebugDumpHandler(): void {
+    if (DebugDump::isEnabled()) {
+      VarDumper::setHandler(DebugDump::class . '::cliHandler');
+    }
   }
 
   /**
@@ -220,7 +198,7 @@ abstract class BrowserTestBase extends TestCase {
   protected function initMink() {
     $driver = $this->getDefaultDriverInstance();
 
-    if ($driver instanceof BrowserKitDriver) {
+    if ($driver instanceof BrowserKitDriver && $driver->getClient() instanceof DrupalTestBrowser) {
       // Turn off curl timeout. Having a timeout is not a problem in a normal
       // test running, but it is a problem when debugging. Also, disable SSL
       // peer verification so that testing under HTTPS always works.
@@ -352,6 +330,10 @@ abstract class BrowserTestBase extends TestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    if ($this->valueObjectForEvents()->metadata()->isRunTestsInSeparateProcesses()->isEmpty()) {
+      @trigger_error('Functional/FunctionalJavascript test classes must specify the #[RunTestsInSeparateProcesses] attribute, not doing so is deprecated in drupal:11.3.0 and is throwing an exception in drupal:12.0.0. See https://www.drupal.org/node/3548485', E_USER_DEPRECATED);
+    }
+
     parent::setUp();
 
     $this->setUpAppRoot();
@@ -397,7 +379,7 @@ abstract class BrowserTestBase extends TestCase {
    *
    * @see \Drupal\Core\File\FileSystemInterface::deleteRecursive()
    */
-  public static function filePreDeleteCallback($path) {
+  public static function filePreDeleteCallback($path): void {
     // When the webserver runs with the same system user as phpunit, we can
     // make read-only files writable again. If not, chmod will fail while the
     // file deletion still works if file permissions have been configured
@@ -440,10 +422,26 @@ abstract class BrowserTestBase extends TestCase {
 
     if ($this->container) {
       // Cleanup mock session started in DrupalKernel::preHandle().
-      /** @var \Symfony\Component\HttpFoundation\Session\Session $session */
-      $session = $this->container->get('request_stack')->getSession();
-      $session->clear();
-      $session->save();
+      if ($this->container->has('request_stack')) {
+        /** @var \Symfony\Component\HttpFoundation\Session\Session $session */
+        $session = $this->container->get('request_stack')->getSession();
+        $session->clear();
+        $session->save();
+      }
+
+      // If cron is running because Automated Cron started it at the end of a
+      // test request, wait for it to complete.
+      if ($this->container->has('module_handler') && $this->container->has('lock')) {
+        $module_handler = $this->container->get('module_handler');
+        assert($module_handler instanceof ModuleHandlerInterface);
+        $lock = $this->container->get('lock');
+        assert($lock instanceof LockBackendInterface);
+        if ($module_handler->moduleExists('automated_cron') && !$lock->lockMayBeAvailable('cron')) {
+          // Use the timeout that is used for acquiring the lock as a delay.
+          /* @see \Drupal\Core\Cron::run() */
+          $lock->wait('cron', 900.0);
+        }
+      }
     }
 
     // Destroy the testing kernel.
@@ -526,8 +524,14 @@ abstract class BrowserTestBase extends TestCase {
    *
    * @return array
    *   Associative array of option keys and values.
+   *
+   * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is
+   *   no direct replacement.
+   *
+   * @see https://www.drupal.org/node/3523039
    */
   protected function getOptions($select, ?Element $container = NULL) {
+    @trigger_error(__METHOD__ . 'is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no direct replacement. See https://www.drupal.org/node/3523039', E_DEPRECATED);
     if (is_string($select)) {
       $select = $this->assertSession()->selectExists($select, $container);
     }
@@ -544,7 +548,7 @@ abstract class BrowserTestBase extends TestCase {
   /**
    * Installs Drupal into the test site.
    */
-  public function installDrupal() {
+  public function installDrupal(): void {
     $this->initUserSession();
     $this->prepareSettings();
     $this->doInstall();
@@ -613,7 +617,7 @@ abstract class BrowserTestBase extends TestCase {
    *   The configuration object with original configuration data.
    */
   protected function config($name) {
-    return $this->container->get('config.factory')->getEditable($name);
+    return \Drupal::configFactory()->getEditable($name);
   }
 
   /**
@@ -623,9 +627,8 @@ abstract class BrowserTestBase extends TestCase {
    *   The JSON decoded drupalSettings value from the current page.
    */
   protected function getDrupalSettings() {
-    $html = $this->getSession()->getPage()->getContent();
-    if (preg_match('@<script type="application/json" data-drupal-selector="drupal-settings-json">([^<]*)</script>@', $html, $matches)) {
-      $settings = Json::decode($matches[1]);
+    if ($elements = $this->xpath('//script[@type="application/json" and @data-drupal-selector="drupal-settings-json"]')) {
+      $settings = Json::decode($elements[0]->getText());
       if (isset($settings['ajaxPageState']['libraries'])) {
         $settings['ajaxPageState']['libraries'] = UrlHelper::uncompressQueryParameter($settings['ajaxPageState']['libraries']);
       }

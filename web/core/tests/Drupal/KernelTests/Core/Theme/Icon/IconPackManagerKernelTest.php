@@ -4,22 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\KernelTests\Core\Theme\Icon;
 
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\Core\Theme\Icon\Exception\IconPackConfigErrorException;
 use Drupal\Core\Theme\Icon\IconDefinitionInterface;
 use Drupal\Core\Theme\Icon\Plugin\IconPackManager;
 use Drupal\Core\Theme\Icon\Plugin\IconPackManagerInterface;
+use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * @coversDefaultClass \Drupal\Core\Theme\Icon\Plugin\IconPackManager
+ * Tests values are from test module icon_test.
  *
- * Tests values are from test module icon_test. Any change of the definition
- * will impact the tests.
+ * Any change of the definition will impact the tests.
  *
  * @see core/modules/system/tests/modules/icon_test/icon_test.icons.yml
- *
- * @group icon
  */
+#[CoversClass(IconPackManager::class)]
+#[Group('icon')]
+#[RunTestsInSeparateProcesses]
 class IconPackManagerKernelTest extends KernelTestBase {
 
   /**
@@ -33,7 +36,6 @@ class IconPackManagerKernelTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'system',
     'icon_test',
   ];
 

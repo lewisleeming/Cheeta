@@ -2,10 +2,10 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldType;
 
+use Drupal\Core\Entity\SynchronizableInterface;
 use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\ChangedFieldItemList;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Entity\SynchronizableInterface;
 
 /**
  * Defines the 'changed' entity field type.
@@ -23,6 +23,16 @@ use Drupal\Core\Entity\SynchronizableInterface;
   default_formatter: "timestamp",
   no_ui: TRUE,
   list_class: ChangedFieldItemList::class,
+  constraints: [
+    "ComplexData" => [
+      "value" => [
+        "Range" => [
+          "min" => "-2147483648",
+          "max" => "2147483648",
+        ],
+      ],
+    ],
+  ]
 )]
 class ChangedItem extends CreatedItem {
 
@@ -46,8 +56,7 @@ class ChangedItem extends CreatedItem {
       /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
       $entity = $this->getEntity();
       if (!$entity instanceof SynchronizableInterface || !$entity->isSyncing()) {
-        /** @var \Drupal\Core\Entity\ContentEntityInterface $original */
-        $original = $entity->original;
+        $original = $entity->getOriginal();
         $langcode = $entity->language()->getId();
         if (!$entity->isNew() && $original && $original->hasTranslation($langcode)) {
           $original_value = $original->getTranslation($langcode)->get($this->getFieldDefinition()->getName())->value;

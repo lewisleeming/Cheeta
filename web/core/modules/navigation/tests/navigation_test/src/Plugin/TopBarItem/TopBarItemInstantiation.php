@@ -9,10 +9,14 @@ use Drupal\navigation\Attribute\TopBarItem;
 use Drupal\navigation\TopBarItemBase;
 use Drupal\navigation\TopBarRegion;
 
+/**
+ * Provides a top bar item plugin for testing the top bar.
+ */
 #[TopBarItem(
   id: 'test_item',
   region: TopBarRegion::Actions,
   label: new TranslatableMarkup('Test Item'),
+  weight: 0,
 )]
 class TopBarItemInstantiation extends TopBarItemBase {
 

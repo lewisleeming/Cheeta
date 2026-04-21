@@ -107,7 +107,7 @@ class Tables implements TablesInterface {
         $column = $field_storage->getMainPropertyName();
       }
       else {
-        $field_storage = FALSE;
+        $field_storage = NULL;
         $column = NULL;
       }
 
@@ -248,7 +248,7 @@ class Tables implements TablesInterface {
             $next = $specifiers[$key + 1];
           }
           // Is this a field column?
-          $columns = $field_storage->getColumns();
+          $columns = $field_storage?->getColumns() ?? [];
           if (isset($columns[$next]) || in_array($next, $table_mapping->getReservedColumns())) {
             // Use it.
             $sql_column = $table_mapping->getFieldColumnName($field_storage, $next);
@@ -299,6 +299,9 @@ class Tables implements TablesInterface {
           $target_definition = $propertyDefinitions[$relationship_specifier]->getTargetDefinition();
           if (!$entity_type_id && $target_definition instanceof EntityDataDefinitionInterface) {
             $entity_type_id = $target_definition->getEntityTypeId();
+          }
+          if (!$entity_type_id) {
+            throw new QueryException(sprintf("Cannot determine entity type for relationship '%s' for field '%s'", $relationship_specifier ?? '', $field));
           }
           $entity_type = $this->entityTypeManager->getActiveDefinition($entity_type_id);
           $field_storage_definitions = $this->entityFieldManager->getActiveFieldStorageDefinitions($entity_type_id);

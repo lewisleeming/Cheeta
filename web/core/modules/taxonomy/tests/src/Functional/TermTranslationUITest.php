@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\taxonomy\Functional;
 
-use Drupal\Tests\content_translation\Functional\ContentTranslationUITestBase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\Tests\content_translation\Functional\ContentTranslationUITestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Term Translation UI.
- *
- * @group taxonomy
  */
+#[Group('taxonomy')]
+#[RunTestsInSeparateProcesses]
 class TermTranslationUITest extends ContentTranslationUITestBase {
 
   /**
@@ -127,7 +129,10 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
    * Tests translate link on vocabulary term list.
    */
   public function testTranslateLinkVocabularyAdminPage(): void {
-    $this->drupalLogin($this->drupalCreateUser(array_merge(parent::getTranslatorPermissions(), ['access administration pages', 'administer taxonomy'])));
+    $this->drupalLogin($this->drupalCreateUser(array_merge(parent::getTranslatorPermissions(), [
+      'access administration pages',
+      'administer taxonomy',
+    ])));
 
     $values = [
       'name' => $this->randomMachineName(),
@@ -167,7 +172,6 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
   protected function doTestTranslationEdit(): void {
     $storage = $this->container->get('entity_type.manager')
       ->getStorage($this->entityTypeId);
-    $storage->resetCache([$this->entityId]);
     $entity = $storage->load($this->entityId);
     $languages = $this->container->get('language_manager')->getLanguages();
 
@@ -188,7 +192,6 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
   protected function doTestPublishedStatus(): void {
     $storage = $this->container->get('entity_type.manager')
       ->getStorage($this->entityTypeId);
-    $storage->resetCache([$this->entityId]);
     $entity = $storage->load($this->entityId);
     $languages = $this->container->get('language_manager')->getLanguages();
 
@@ -206,7 +209,6 @@ class TermTranslationUITest extends ContentTranslationUITestBase {
         $this->drupalGet($url, $options);
         $this->submitForm(['status[value]' => $value], 'Save');
       }
-      $storage->resetCache([$this->entityId]);
       $entity = $storage->load($this->entityId);
       foreach ($this->langcodes as $langcode) {
         // The term is created as unpublished thus we switch to the published

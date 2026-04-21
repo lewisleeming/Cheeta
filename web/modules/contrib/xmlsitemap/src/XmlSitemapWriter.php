@@ -173,7 +173,7 @@ class XmlSitemapWriter extends \XMLWriter {
    * @param string|array $content
    *   The element contents or an array of the elements' sub-elements.
    */
-  public function writeElement(string $name, string|array $content = NULL): bool {
+  public function writeElement(string $name, string|array|null $content = NULL): bool {
     if (is_array($content)) {
       $return = $this->startElement($name);
       $return &= $this->writeRaw($this->formatXmlElements($content));

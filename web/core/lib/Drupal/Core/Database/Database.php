@@ -13,6 +13,8 @@ use Drupal\Core\Cache\NullBackend;
  * This class is un-extendable. It acts to encapsulate all control and
  * shepherding of database connections into a single location without the use of
  * globals.
+ *
+ * @final
  */
 abstract class Database {
 
@@ -47,14 +49,15 @@ abstract class Database {
   /**
    * An array of active query log objects.
    *
+   * @var array
    * Every connection has one and only one logger object for all targets and
    * logging keys.
    *
-   * array(
-   *   '$db_key' => DatabaseLog object.
-   * );
-   *
-   * @var array
+   * @code
+   *   [
+   *     '$db_key' => DatabaseLog object.
+   *   ]
+   * @endcode
    */
   protected static $logs = [];
 
@@ -303,6 +306,7 @@ abstract class Database {
    *   (optional) The connection key for which to return information.
    *
    * @return array|null
+   *   An associative array of database information. Defaults to an empty array.
    */
   final public static function getConnectionInfo($key = 'default') {
     if (!empty(self::$databaseInfo[$key])) {
@@ -314,6 +318,8 @@ abstract class Database {
    * Gets connection information for all available databases.
    *
    * @return array
+   *   An associative array of database information for all available database,
+   *   keyed by the database name. Defaults to an empty array.
    */
   final public static function getAllConnectionInfo() {
     return self::$databaseInfo;
@@ -472,9 +478,10 @@ abstract class Database {
   /**
    * Instructs the system to temporarily ignore a given key/target.
    *
-   * At times we need to temporarily disable replica queries. To do so, call this
-   * method with the database key and the target to disable. That database key
-   * will then always fall back to 'default' for that key, even if it's defined.
+   * At times we need to temporarily disable replica queries. To do so, call
+   * this method with the database key and the target to disable. That database
+   * key will then always fall back to 'default' for that key, even if it's
+   * defined.
    *
    * @param string $key
    *   The database connection key.
@@ -490,8 +497,8 @@ abstract class Database {
    *
    * @param string $url
    *   The URL.
-   * @param string $root
-   *   The root directory of the Drupal installation.
+   * @param string|bool|null $root
+   *   (deprecated) The root directory of the Drupal installation.
    * @param bool|null $include_test_drivers
    *   (optional) Whether to include test extensions. If FALSE, all 'tests'
    *   directories are excluded in the search. When NULL will be determined by
@@ -506,7 +513,16 @@ abstract class Database {
    * @throws \RuntimeException
    *   Exception thrown when a module provided database driver does not exist.
    */
-  public static function convertDbUrlToConnectionInfo($url, $root, ?bool $include_test_drivers = NULL) {
+  public static function convertDbUrlToConnectionInfo(string $url, $root = NULL, ?bool $include_test_drivers = NULL): array {
+    if ($root !== NULL) {
+      if (is_bool($root)) {
+        $include_test_drivers = $root;
+      }
+      else {
+        @trigger_error("Passing a string \$root value to " . __METHOD__ . "() is deprecated in drupal:11.3.0 and will be removed in drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3511287", E_USER_DEPRECATED);
+      }
+    }
+
     // Check that the URL is well formed, starting with 'scheme://', where
     // 'scheme' is a database driver name.
     if (preg_match('/^(.*):\/\//', $url, $matches) !== 1) {
@@ -521,16 +537,11 @@ abstract class Database {
     $url_component_query = $url_components['query'] ?? '';
     parse_str($url_component_query, $query);
 
-    // Add the module key for core database drivers when the module key is not
-    // set.
-    if (!isset($query['module']) && in_array($driverName, ['mysql', 'pgsql', 'sqlite'], TRUE)) {
-      $query['module'] = $driverName;
-    }
-    if (!isset($query['module'])) {
-      throw new \InvalidArgumentException("Can not convert '$url' to a database connection, the module providing the driver '{$driverName}' is not specified");
-    }
+    // Use the driver name as the module name when the module name is not
+    // provided.
+    $module = $query['module'] ?? $driverName;
 
-    $driverNamespace = "Drupal\\{$query['module']}\\Driver\\Database\\{$driverName}";
+    $driverNamespace = "Drupal\\{$module}\\Driver\\Database\\{$driverName}";
 
     /** @var \Drupal\Core\Extension\DatabaseDriver $driver */
     $driver = self::getDriverList()
@@ -559,7 +570,7 @@ abstract class Database {
 
     $additional_class_loader->register(TRUE);
 
-    $options = $connection_class::createConnectionOptionsFromUrl($url, $root);
+    $options = $connection_class::createConnectionOptionsFromUrl($url, NULL);
 
     // Add the necessary information to autoload code.
     // @see \Drupal\Core\Site\Settings::initialize()
@@ -621,8 +632,6 @@ abstract class Database {
    * @param bool $shutdown
    *   Internal param to denote that the method is being called by
    *   _drupal_shutdown_function().
-   *
-   * @return void
    *
    * @internal
    *   This method exists only to work around a bug caused by Drupal incorrectly

@@ -6,19 +6,17 @@ namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the core Drupal\views\Plugin\views\filter\BooleanOperator handler.
  *
- * @group views
  * @see \Drupal\views\Plugin\views\filter\BooleanOperator
  */
+#[Group('views')]
+#[RunTestsInSeparateProcesses]
 class FilterBooleanOperatorTest extends ViewsKernelTestBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = ['system'];
 
   /**
    * Views used by this test.
@@ -247,6 +245,7 @@ class FilterBooleanOperatorTest extends ViewsKernelTestBase {
    * Provides grouped exposed filter configuration.
    *
    * @return array
+   *   An array of grouped exposed filter configuration.
    */
   protected function getGroupedExposedFilters(): array {
     $filters = [

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Drupal\Tests\navigation\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\PerformanceTestBase;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests performance with the navigation toolbar enabled.
@@ -13,11 +16,11 @@ use Drupal\FunctionalJavascriptTests\PerformanceTestBase;
  *
  * @todo move this coverage to StandardPerformanceTest when Navigation is
  * enabled by default.
- *
- * @group Common
- * @group #slow
- * @requires extension apcu
  */
+#[Group('Common')]
+#[Group('#slow')]
+#[RequiresPhpExtension('apcu')]
+#[RunTestsInSeparateProcesses]
 class PerformanceTest extends PerformanceTestBase {
 
   /**
@@ -68,20 +71,34 @@ class PerformanceTest extends PerformanceTestBase {
       'SELECT "roles_target_id" FROM "user__roles" WHERE "entity_id" = "2"',
       'SELECT "name", "value" FROM "key_value" WHERE "name" IN ( "theme:stark" ) AND "collection" = "config.entity.key_store.block"',
     ];
-
     $recorded_queries = $performance_data->getQueries();
     $this->assertSame($expected_queries, $recorded_queries);
-    $this->assertSame(4, $performance_data->getQueryCount());
-    $this->assertSame(61, $performance_data->getCacheGetCount());
-    $this->assertSame(2, $performance_data->getCacheSetCount());
-    $this->assertSame(0, $performance_data->getCacheDeleteCount());
-    $this->assertSame(2, $performance_data->getCacheTagChecksumCount());
-    $this->assertSame(29, $performance_data->getCacheTagIsValidCount());
-    $this->assertSame(0, $performance_data->getCacheTagInvalidationCount());
-    $this->assertSame(1, $performance_data->getStyleSheetCount());
-    $this->assertSame(2, $performance_data->getScriptCount());
-    $this->assertLessThan(90200, $performance_data->getStylesheetBytes());
-    $this->assertLessThan(220000, $performance_data->getScriptBytes());
+
+    $expected = [
+      'QueryCount' => 4,
+      'CacheGetCount' => 45,
+      'CacheGetCountByBin' => [
+        'config' => 10,
+        'data' => 4,
+        'discovery' => 9,
+        'bootstrap' => 8,
+        'dynamic_page_cache' => 1,
+        'render' => 12,
+        'menu' => 1,
+      ],
+      'CacheSetCount' => 2,
+      'CacheSetCountByBin' => [
+        'dynamic_page_cache' => 2,
+      ],
+      'CacheDeleteCount' => 0,
+      'CacheTagInvalidationCount' => 0,
+      'CacheTagLookupQueryCount' => 13,
+      'ScriptCount' => 3,
+      'ScriptBytes' => 140745,
+      'StylesheetCount' => 2,
+      'StylesheetBytes' => 41524,
+    ];
+    $this->assertMetrics($expected, $performance_data);
 
     // Check that the navigation toolbar is cached without any high-cardinality
     // cache contexts (user, route, query parameters etc.).

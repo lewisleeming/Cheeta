@@ -15,9 +15,9 @@ use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\editor\Entity\Editor;
-use Drupal\file\Upload\FileUploadHandler;
+use Drupal\file\Upload\FileUploadHandlerInterface;
 use Drupal\file\Upload\FormUploadedFile;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,7 +39,7 @@ class CKEditor5ImageController extends ControllerBase {
    *
    * @param \Drupal\Core\File\FileSystemInterface $fileSystem
    *   The file system service.
-   * @param \Drupal\file\Upload\FileUploadHandler $fileUploadHandler
+   * @param \Drupal\file\Upload\FileUploadHandlerInterface $fileUploadHandler
    *   The file upload handler.
    * @param \Drupal\Core\Lock\LockBackendInterface $lock
    *   The lock service.
@@ -48,22 +48,11 @@ class CKEditor5ImageController extends ControllerBase {
    */
   public function __construct(
     protected FileSystemInterface $fileSystem,
-    protected FileUploadHandler $fileUploadHandler,
+    protected FileUploadHandlerInterface $fileUploadHandler,
+    #[Autowire(service: 'lock')]
     protected LockBackendInterface $lock,
     protected CKEditor5PluginManagerInterface $pluginManager,
   ) {
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('file_system'),
-      $container->get('file.upload_handler'),
-      $container->get('lock'),
-      $container->get('plugin.manager.ckeditor5.plugin')
-    );
   }
 
   /**
