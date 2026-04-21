@@ -1,4 +1,4 @@
 name: Car brand core
 type: module
-description: 'Provides custom functionality. (TBD)'
+description: 'Provides custom functionality. Includes price list, revenue csv importer and revenue table'
 core_version_requirement: ^9.5 || ^10 || ^11
