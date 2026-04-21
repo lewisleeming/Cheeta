@@ -1,0 +1,8 @@
+admin:
+  version: 1.33
+  js:
+    js/ds_extras.admin.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupal.form
